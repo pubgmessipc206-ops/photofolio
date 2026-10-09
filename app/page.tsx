@@ -237,7 +237,9 @@ export default function HomePage() {
 
       {/* الفوتر */}
       <footer className="border-t border-slate-800 py-8 text-center text-slate-500 text-sm">
-        جميع الحقوق محفوظة © {new Date().getFullYear()} PhotoFolio — تم الربط بـ Supabase 🚀
+<footer className="border-t border-slate-800 py-8 text-center text-slate-500 text-sm">
+  © 2026 PhotoFolio – تم الربط بـ Supabase 🚀
+</footer>
       </footer>
     </div>
   );
