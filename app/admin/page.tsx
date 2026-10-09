@@ -13,13 +13,22 @@ interface MediaItem {
   created_at: string;
 }
 
+function getYouTubeEmbedUrl(url: string) {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return match && match[2].length === 11 ? `https://www.youtube.com/embed/${match[2]}` : null;
+}
+
 export default function AdminPage() {
   const [mounted, setMounted] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
-  
+
   const [title, setTitle] = useState('');
   const [section, setSection] = useState('gallery');
+  const [uploadMode, setUploadMode] = useState<'file' | 'youtube'>('file');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [mediaList, setMediaList] = useState<MediaItem[]>([]);
@@ -63,47 +72,67 @@ export default function AdminPage() {
     }
   };
 
-  const handleUpload = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !title) return alert('الرجاء اختيار ملف وإدخال عنوان!');
+    if (!title) return alert('الرجاء إدخال عنوان العنصر!');
 
     setLoading(true);
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `${section}/${fileName}`;
+      if (uploadMode === 'youtube') {
+        if (!youtubeUrl) throw new Error('الرجاء إدخال رابط يوتيوب!');
+        const embedUrl = getYouTubeEmbedUrl(youtubeUrl);
+        if (!embedUrl) throw new Error('رابط يوتيوب غير صحيح!');
 
-      const { error: uploadError } = await supabase.storage
-        .from('media')
-        .upload(filePath, file);
+        const { error: dbError } = await supabase.from('media_items').insert([
+          {
+            title,
+            url: youtubeUrl,
+            type: 'video',
+            section,
+          },
+        ]);
 
-      if (uploadError) throw uploadError;
+        if (dbError) throw dbError;
+      } else {
+        if (!file) throw new Error('الرجاء اختيار ملف لرفعه!');
 
-      const { data: publicUrlData } = supabase.storage
-        .from('media')
-        .getPublicUrl(filePath);
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `${section}/${fileName}`;
 
-      const publicUrl = publicUrlData.publicUrl;
-      const isVideo = file.type.startsWith('video');
+        const { error: uploadError } = await supabase.storage
+          .from('media')
+          .upload(filePath, file);
 
-      const { error: dbError } = await supabase.from('media_items').insert([
-        {
-          title,
-          url: publicUrl,
-          type: isVideo ? 'video' : 'image',
-          section,
-        },
-      ]);
+        if (uploadError) throw uploadError;
 
-      if (dbError) throw dbError;
+        const { data: publicUrlData } = supabase.storage
+          .from('media')
+          .getPublicUrl(filePath);
 
-      alert('تم الرفع بنجاح! 🎉');
+        const publicUrl = publicUrlData.publicUrl;
+        const isVideo = file.type.startsWith('video');
+
+        const { error: dbError } = await supabase.from('media_items').insert([
+          {
+            title,
+            url: publicUrl,
+            type: isVideo ? 'video' : 'image',
+            section,
+          },
+        ]);
+
+        if (dbError) throw dbError;
+      }
+
+      alert('تمت الإضافة بنجاح! 🎉');
       setTitle('');
+      setYoutubeUrl('');
       setFile(null);
       fetchMedia();
     } catch (error: any) {
-      alert('حدث خطأ أثناء الرفع: ' + error.message);
+      alert('حدث خطأ: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -138,7 +167,7 @@ export default function AdminPage() {
           <div className="text-5xl">🔒</div>
           <h1 className="text-2xl font-bold text-amber-400">لوحة التحكم المغلقة</h1>
           <p className="text-sm text-slate-400">يرجى إدخال كلمة السر للدخول</p>
-          
+
           <input
             type="password"
             value={passwordInput}
@@ -164,9 +193,9 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white p-6 sm:p-10 rtl" dir="rtl">
+    <div className="min-h-screen bg-slate-900 text-white p-4 sm:p-10 rtl" dir="rtl">
       <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
           <h1 className="text-2xl sm:text-3xl font-bold text-amber-400">
             لوحة تحكم مشروع PhotoFolio 📸
           </h1>
@@ -186,16 +215,16 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <form onSubmit={handleUpload} className="bg-slate-800 p-6 rounded-2xl space-y-4 mb-10 shadow-xl border border-slate-700">
+        <form onSubmit={handleSubmit} className="bg-slate-800 p-6 rounded-2xl space-y-4 mb-10 shadow-xl border border-slate-700">
           <h2 className="text-xl font-semibold text-slate-200">إضافة صورة أو فيديو جديد</h2>
-          
+
           <div>
             <label className="block mb-2 text-sm font-medium text-slate-300">العنوان:</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="مثال: صورة غلاف المعرض الرئيسي"
+              placeholder="مثال: فيديو مشروع جديد / صورة غلاف المعرض"
               className="w-full p-3 rounded-xl bg-slate-700 border border-slate-600 text-white focus:outline-none focus:border-amber-400 transition"
               required
             />
@@ -215,53 +244,110 @@ export default function AdminPage() {
           </div>
 
           <div>
-            <label className="block mb-2 text-sm font-medium text-slate-300">اختر الملف (صورة أو فيديو):</label>
-            <input
-              type="file"
-              accept="image/*,video/*"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="w-full p-2 rounded-xl bg-slate-700 border border-slate-600 text-white cursor-pointer text-sm"
-              required
-            />
+            <label className="block mb-2 text-sm font-medium text-slate-300">طريقة الإضافة:</label>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <button
+                type="button"
+                onClick={() => setUploadMode('file')}
+                className={`py-2 px-4 rounded-xl text-sm font-bold border transition ${
+                  uploadMode === 'file'
+                    ? 'bg-amber-500 text-slate-950 border-amber-500'
+                    : 'bg-slate-700 text-slate-300 border-slate-600'
+                }`}
+              >
+                📁 رفع ملف (صورة / فيديو)
+              </button>
+              <button
+                type="button"
+                onClick={() => setUploadMode('youtube')}
+                className={`py-2 px-4 rounded-xl text-sm font-bold border transition ${
+                  uploadMode === 'youtube'
+                    ? 'bg-amber-500 text-slate-950 border-amber-500'
+                    : 'bg-slate-700 text-slate-300 border-slate-600'
+                }`}
+              >
+                🎬 فيديو من يوتيوب (رابط)
+              </button>
+            </div>
           </div>
+
+          {uploadMode === 'youtube' ? (
+            <div>
+              <label className="block mb-2 text-sm font-medium text-slate-300">رابط فيديو YouTube:</label>
+              <input
+                type="url"
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                placeholder="مثال: https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                className="w-full p-3 rounded-xl bg-slate-700 border border-slate-600 text-white focus:outline-none focus:border-amber-400 transition text-left dir-ltr"
+                required
+              />
+            </div>
+          ) : (
+            <div>
+              <label className="block mb-2 text-sm font-medium text-slate-300">اختر الملف (صورة أو فيديو):</label>
+              <input
+                type="file"
+                accept="image/*,video/*"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                className="w-full p-2 rounded-xl bg-slate-700 border border-slate-600 text-white cursor-pointer text-sm"
+                required
+              />
+            </div>
+          )}
 
           <button
             type="submit"
             disabled={loading}
             className="w-full py-3.5 bg-amber-500 hover:bg-amber-600 font-bold rounded-xl transition text-slate-950 disabled:opacity-50 mt-4"
           >
-            {loading ? 'جاري الرفع إلى Supabase...' : 'رفع الملف الآن 🚀'}
+            {loading ? 'جاري الإضافة...' : 'حفظ وإضافة الآن 🚀'}
           </button>
         </form>
 
         <div className="bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
-          <h2 className="text-xl font-semibold mb-4 text-slate-200">الملفات المرفوعة حالياً</h2>
-          
+          <h2 className="text-xl font-semibold mb-4 text-slate-200">العناصر المضافة حالياً</h2>
+
           {mediaList.length === 0 ? (
-            <p className="text-slate-400 text-center py-6">لا توجد ملفات مرفوعة بعد.</p>
+            <p className="text-slate-400 text-center py-6">لا توجد عناصر بعد.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {mediaList.map((item) => (
-                <div key={item.id} className="bg-slate-700/60 p-3 rounded-xl border border-slate-600/50 flex flex-col justify-between">
-                  <div>
-                    {item.type === 'video' ? (
-                      <video src={item.url} controls className="w-full h-36 object-cover rounded-lg mb-2" />
-                    ) : (
-                      <img src={item.url} alt={item.title} className="w-full h-36 object-cover rounded-lg mb-2" />
-                    )}
-                    <h3 className="font-bold text-sm text-slate-100 truncate">{item.title}</h3>
-                    <span className="text-xs font-semibold text-amber-400 bg-slate-800/80 px-2.5 py-1 rounded-md inline-block mt-2">
-                      {item.section}
-                    </span>
+              {mediaList.map((item) => {
+                const ytEmbed = getYouTubeEmbedUrl(item.url);
+
+                return (
+                  <div key={item.id} className="bg-slate-700/60 p-3 rounded-xl border border-slate-600/50 flex flex-col justify-between">
+                    <div>
+                      {ytEmbed ? (
+                        <iframe
+                          src={ytEmbed}
+                          className="w-full h-36 rounded-lg mb-2"
+                          allowFullScreen
+                        />
+                      ) : item.type === 'video' ? (
+                        <video src={item.url} controls className="w-full h-36 object-cover rounded-lg mb-2" />
+                      ) : (
+                        <img src={item.url} alt={item.title} className="w-full h-36 object-cover rounded-lg mb-2" />
+                      )}
+                      <h3 className="font-bold text-sm text-slate-100 truncate">{item.title}</h3>
+                      <div className="flex gap-2 items-center mt-2">
+                        <span className="text-xs font-semibold text-amber-400 bg-slate-800 px-2 py-0.5 rounded">
+                          {item.section}
+                        </span>
+                        <span className="text-xs font-semibold text-slate-300 bg-slate-800 px-2 py-0.5 rounded">
+                          {ytEmbed ? 'يوتيوب 🎬' : item.type === 'video' ? 'فيديو 🎥' : 'صورة 📷'}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="mt-4 w-full py-1.5 bg-red-600/80 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition"
+                    >
+                      حذف 🗑️
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="mt-4 w-full py-1.5 bg-red-600/80 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition"
-                  >
-                    حذف 🗑️
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

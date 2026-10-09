@@ -13,6 +13,13 @@ interface MediaItem {
   created_at: string;
 }
 
+function getYouTubeEmbedUrl(url: string) {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return match && match[2].length === 11 ? `https://www.youtube.com/embed/${match[2]}` : null;
+}
+
 export default function HomePage() {
   const [mediaList, setMediaList] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,9 +53,38 @@ export default function HomePage() {
     .filter((item) => item.section === 'gallery' || !item.section)
     .filter((item) => (filter === 'all' ? true : item.type === filter));
 
+  const renderMediaContent = (item: MediaItem, heightClass = 'h-64 sm:h-80') => {
+    const ytEmbed = getYouTubeEmbedUrl(item.url);
+
+    if (ytEmbed) {
+      return (
+        <iframe
+          src={ytEmbed}
+          className={`w-full ${heightClass} rounded-2xl`}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      );
+    }
+
+    if (item.type === 'video') {
+      return (
+        <video src={item.url} controls className={`w-full ${heightClass} object-cover`} />
+      );
+    }
+
+    return (
+      <img
+        src={item.url}
+        alt={item.title}
+        className={`w-full ${heightClass} object-cover group-hover:scale-105 transition duration-500`}
+      />
+    );
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans rtl overflow-x-hidden max-w-full" dir="rtl">
-      {/* القائمة العلوية متجاوبة مع الموبايل */}
+      {/* القائمة العلوية متجاوبة */}
       <nav className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between items-center max-w-7xl mx-auto">
         <div className="text-xl sm:text-2xl font-black text-amber-400 tracking-wider flex items-center gap-2">
           📸 PhotoFolio
@@ -81,14 +117,10 @@ export default function HomePage() {
               <div
                 key={item.id}
                 onClick={() => setSelectedMedia(item)}
-                className="relative group overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-800 shadow-2xl cursor-pointer"
+                className="relative group overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-800 shadow-2xl cursor-pointer bg-slate-900"
               >
-                {item.type === 'video' ? (
-                  <video src={item.url} autoPlay loop muted className="w-full h-64 sm:h-80 object-cover" />
-                ) : (
-                  <img src={item.url} alt={item.title} className="w-full h-64 sm:h-80 object-cover group-hover:scale-105 transition duration-500" />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-4 sm:p-6">
+                {renderMediaContent(item, 'h-64 sm:h-80')}
+                <div className="p-4 bg-slate-900 text-right">
                   <h3 className="text-base sm:text-xl font-bold text-amber-300 break-words">{item.title}</h3>
                 </div>
               </div>
@@ -112,18 +144,14 @@ export default function HomePage() {
                 <div
                   key={item.id}
                   onClick={() => setSelectedMedia(item)}
-                  className="rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-700 shadow-xl cursor-pointer"
+                  className="rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-700 shadow-xl cursor-pointer bg-slate-900"
                 >
-                  {item.type === 'video' ? (
-                    <video src={item.url} controls className="w-full h-64 sm:h-80 object-cover" />
-                  ) : (
-                    <img src={item.url} alt={item.title} className="w-full h-64 sm:h-80 object-cover" />
-                  )}
+                  {renderMediaContent(item, 'h-64 sm:h-80')}
                 </div>
               ))
             ) : (
               <div className="bg-slate-800 h-64 sm:h-80 rounded-2xl sm:rounded-3xl flex items-center justify-center text-slate-500 border border-dashed border-slate-700 p-4 text-center text-sm">
-                يمكنك رفع صورة لقسم "About" من لوحة التحكم
+                يمكنك رفع صورة أو فيديو لقسم "About" من لوحة التحكم
               </div>
             )}
           </div>
@@ -180,21 +208,13 @@ export default function HomePage() {
                 onClick={() => setSelectedMedia(item)}
                 className="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 hover:border-amber-400/50 transition shadow-lg group flex flex-col cursor-pointer"
               >
-                <div className="relative h-48 sm:h-64 overflow-hidden bg-slate-950">
-                  {item.type === 'video' ? (
-                    <video src={item.url} className="w-full h-full object-cover" />
-                  ) : (
-                    <img
-                      src={item.url}
-                      alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                    />
-                  )}
+                <div className="relative overflow-hidden bg-slate-950">
+                  {renderMediaContent(item, 'h-48 sm:h-64')}
                 </div>
                 <div className="p-3 sm:p-4 flex justify-between items-center mt-auto gap-2">
                   <h3 className="font-bold text-slate-200 text-sm sm:text-base truncate">{item.title}</h3>
                   <span className="text-xs font-semibold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-slate-800 text-amber-400 shrink-0">
-                    {item.type === 'video' ? 'فيديو' : 'صورة'}
+                    {getYouTubeEmbedUrl(item.url) ? 'يوتيوب' : item.type === 'video' ? 'فيديو' : 'صورة'}
                   </span>
                 </div>
               </div>
@@ -221,11 +241,7 @@ export default function HomePage() {
             </button>
 
             <div className="flex items-center justify-center bg-black/50 rounded-xl sm:rounded-2xl overflow-hidden max-h-[70vh]">
-              {selectedMedia.type === 'video' ? (
-                <video src={selectedMedia.url} controls autoPlay className="w-full max-h-[65vh] object-contain" />
-              ) : (
-                <img src={selectedMedia.url} alt={selectedMedia.title} className="w-full max-h-[65vh] object-contain" />
-              )}
+              {renderMediaContent(selectedMedia, 'max-h-[65vh]')}
             </div>
 
             <div className="p-3 text-center">
