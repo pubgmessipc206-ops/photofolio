@@ -98,14 +98,14 @@ export default function HomePage() {
         .rgb-border-box {
           position: relative;
           background: #020617;
-          border-radius: 1rem;
-          padding: 2px;
+          border-radius: 0.8rem;
+          padding: 1.5px;
         }
         .rgb-border-box::before {
           content: '';
           position: absolute;
-          inset: -2px;
-          border-radius: 1.1rem;
+          inset: -1.5px;
+          border-radius: 0.85rem;
           background: linear-gradient(90deg, #ff0055, #ff0000, #ff7700, #ffeb00, #00ff66, #00ffff, #0055ff, #ff0055);
           background-size: 400% 400%;
           z-index: 0;
@@ -115,24 +115,25 @@ export default function HomePage() {
           position: relative;
           z-index: 1;
           background: #090d16;
-          border-radius: 0.95rem;
+          border-radius: 0.75rem;
         }
       `}</style>
 
-      {/* القائمة العلوية مع براند RGB كبير وزر الصور المخفي زر الرئيسية */}
-      <nav className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center max-w-7xl mx-auto">
+      {/* القائمة العلوية المتجاوبة للموبايل والكمبيوتر */}
+      <nav className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-2.5 sm:px-6 py-2.5 sm:py-4 flex justify-between items-center max-w-7xl mx-auto gap-2">
         
-        {/* اسم البراند مكبّر مع إطار RGB متحرك */}
-        <div className="rgb-border-box">
-          <div className="rgb-inner-content px-4 py-2 flex items-center gap-2.5">
-            <span className="text-lg sm:text-xl">📸</span>
-            <span className="text-base sm:text-xl font-black tracking-widest bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500 bg-clip-text text-transparent font-serif">
+        {/* اسم البراند متناسق ومستقيم بدون انكسار سطر */}
+        <div className="rgb-border-box shrink-0">
+          <div className="rgb-inner-content px-2.5 sm:px-4 py-1.5 sm:py-2 flex items-center gap-1.5 sm:gap-2.5">
+            <span className="text-sm sm:text-xl">📸</span>
+            <span className="text-xs sm:text-lg font-black tracking-wider bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500 bg-clip-text text-transparent font-serif whitespace-nowrap">
               Pʜᴏᴛᴏ • Kʜᴏʟɪᴏ
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm font-semibold text-slate-300">
+        {/* أزرار التنقل */}
+        <div className="flex items-center gap-2 sm:gap-6 text-xs sm:text-sm font-semibold text-slate-300 shrink-0">
           <a
             href="#gallery"
             onClick={() => setFilter('image')}
@@ -152,7 +153,7 @@ export default function HomePage() {
           <Link
             href="/admin"
             title="لوحة التحكم"
-            className="p-1.5 rounded-lg text-slate-600 hover:text-slate-300 hover:bg-slate-800/50 transition duration-300 text-base sm:text-lg opacity-60 hover:opacity-100"
+            className="p-1 rounded-lg text-slate-600 hover:text-slate-300 hover:bg-slate-800/50 transition duration-300 text-sm sm:text-lg opacity-60 hover:opacity-100"
           >
             ⚙️
           </Link>
@@ -160,7 +161,7 @@ export default function HomePage() {
       </nav>
 
       {/* قسم Hero */}
-      <section id="hero" className="relative py-12 sm:py-20 px-4 sm:px-6 max-w-7xl mx-auto text-center">
+      <section id="hero" className="relative py-10 sm:py-20 px-4 sm:px-6 max-w-7xl mx-auto text-center">
         <h1 className="text-2xl sm:text-4xl md:text-6xl font-black text-white mb-4 sm:mb-6 leading-tight break-words">
           معرض الأعمال الفوتوغرافية
         </h1>
