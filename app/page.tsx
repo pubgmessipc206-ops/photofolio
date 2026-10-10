@@ -109,14 +109,11 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* قسم Hero */}
+      {/* قسم Hero الترحيبي مع العنوان المبسط فقط */}
       <section id="hero" className="relative py-12 sm:py-20 px-4 sm:px-6 max-w-7xl mx-auto text-center">
         <h1 className="text-2xl sm:text-4xl md:text-6xl font-black text-white mb-4 sm:mb-6 leading-tight break-words">
-          معرض الأعمال الفوتوغرافية & البصرية 🎬
+          معرض الأعمال الفوتوغرافية
         </h1>
-        <p className="text-sm sm:text-lg text-slate-400 max-w-2xl mx-auto mb-8 sm:mb-10 px-2 leading-relaxed">
-          أهلاً بك في معرض أعمالي. استكشف أحدث الصور والفيديوهات الاحترافية التي قمت بإلتقاطها وتصميمها.
-        </p>
 
         {heroItems.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-6">
@@ -136,7 +133,7 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* قسم Reels & Shorts القصيرة العمودية */}
+      {/* قسم Reels & Shorts */}
       {reelsItems.length > 0 && (
         <section id="reels" className="py-12 sm:py-20 px-4 sm:px-6 max-w-7xl mx-auto bg-slate-900/30 border-y border-slate-900">
           <div className="text-center mb-10">
