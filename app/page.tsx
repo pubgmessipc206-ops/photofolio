@@ -10,12 +10,10 @@ interface MediaItem {
   url: string;
   type: string;
   section: string;
-  album_id?: string;
   created_at: string;
 }
 
 interface GroupedMedia {
-  id: string;
   title: string;
   type: string;
   section: string;
@@ -29,7 +27,7 @@ function getYouTubeEmbedUrl(url: string) {
   return match && match[2].length === 11 ? `https://www.youtube.com/embed/${match[2]}` : null;
 }
 
-// مكون السلايدر الخاص بالتقليب كـ ألبوم إنستجرام
+// مكون تقليب الصور على طريقة إنستجرام
 function InstagramCarousel({ items, heightClass = 'h-64 sm:h-80' }: { items: MediaItem[]; heightClass?: string }) {
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -44,12 +42,12 @@ function InstagramCarousel({ items, heightClass = 'h-64 sm:h-80' }: { items: Med
 
   return (
     <div className="relative group w-full overflow-hidden rounded-2xl bg-slate-950">
-      {/* مؤشر عدد الصور فوق الألبوم */}
-      <div className="absolute top-3 left-3 z-20 bg-slate-950/80 backdrop-blur-md text-amber-400 text-xs font-bold px-2.5 py-1 rounded-full border border-slate-800">
-        {activeIndex + 1} / {items.length} 📸
-      </div>
+      {items.length > 1 && (
+        <div className="absolute top-3 left-3 z-20 bg-slate-950/85 backdrop-blur-md text-amber-400 text-xs font-bold px-2.5 py-1 rounded-full border border-slate-800">
+          {activeIndex + 1} / {items.length} 📸
+        </div>
+      )}
 
-      {/* حاوية الصور القابلة للتمرير والتقليب */}
       <div
         onScroll={handleScroll}
         className="flex w-full overflow-x-auto snap-x snap-mandatory scrollbar-none dir-ltr"
@@ -69,7 +67,6 @@ function InstagramCarousel({ items, heightClass = 'h-64 sm:h-80' }: { items: Med
         ))}
       </div>
 
-      {/* نقاط الترقيم بالأسفل مثل إنستجرام */}
       {items.length > 1 && (
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 bg-slate-950/60 px-3 py-1.5 rounded-full backdrop-blur-sm border border-slate-800">
           {items.map((_, i) => (
@@ -90,7 +87,6 @@ export default function HomePage() {
   const [mediaList, setMediaList] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'image' | 'video'>('all');
-  const [selectedGroup, setSelectedGroup] = useState<GroupedMedia | null>(null);
 
   useEffect(() => {
     fetchMedia();
@@ -113,33 +109,27 @@ export default function HomePage() {
     }
   };
 
-  // تجميع الصور في ألبومات
+  // تجميع الصور التي تحمل نفس العنوان في ألبوم واحد تلقائياً
   const groupMediaItems = (items: MediaItem[]): GroupedMedia[] => {
-    const groups: { [key: string]: GroupedMedia } = {};
+    const groups: { [title: string]: MediaItem[] } = {};
     const result: GroupedMedia[] = [];
 
     items.forEach((item) => {
-      if (item.album_id) {
-        if (!groups[item.album_id]) {
-          groups[item.album_id] = {
-            id: item.album_id,
-            title: item.title,
-            type: item.type,
-            section: item.section,
-            items: [],
-          };
-          result.push(groups[item.album_id]);
-        }
-        groups[item.album_id].items.push(item);
-      } else {
-        result.push({
-          id: item.id,
-          title: item.title,
-          type: item.type,
-          section: item.section,
-          items: [item],
-        });
+      const key = item.title.trim();
+      if (!groups[key]) {
+        groups[key] = [];
       }
+      groups[key].push(item);
+    });
+
+    Object.keys(groups).forEach((titleKey) => {
+      const groupItems = groups[titleKey];
+      result.push({
+        title: titleKey,
+        type: groupItems[0].type,
+        section: groupItems[0].section,
+        items: groupItems,
+      });
     });
 
     return result;
@@ -157,8 +147,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans rtl overflow-x-hidden max-w-full" dir="rtl">
-      
-      {/* أنيميشن إطار الـ RGB */}
       <style jsx global>{`
         @keyframes rgbGlow {
           0% { background-position: 0% 50%; }
@@ -255,12 +243,12 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* المعرض الرئيسي المحدث بسلايدر إنستجرام */}
+      {/* المعرض */}
       <section id="gallery" className="py-12 sm:py-20 px-4 sm:px-6 max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-8 sm:mb-10 gap-4 text-center sm:text-right">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">معرض الأعمال المتميزة</h2>
-            <p className="text-slate-400 text-xs sm:text-sm">قم بالسحب والتمرير لتقليب صور الألبوم 📸</p>
+            <p className="text-slate-400 text-xs sm:text-sm">قم بالسحب لتقليب صور الألبوم 📸</p>
           </div>
 
           <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
@@ -299,12 +287,12 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {galleryGrouped.map((group) => (
+            {galleryGrouped.map((group, idx) => (
               <div
-                key={group.id}
+                key={idx}
                 className="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 hover:border-amber-400/50 transition shadow-lg flex flex-col"
               >
-                {/* سلايدر التقليب */}
+                {/* سلايدر الصور */}
                 <InstagramCarousel items={group.items} heightClass="h-64 sm:h-80" />
 
                 <div className="p-4 flex justify-between items-center mt-auto border-t border-slate-800/80">
