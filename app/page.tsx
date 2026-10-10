@@ -84,20 +84,24 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans rtl overflow-x-hidden max-w-full" dir="rtl">
-      {/* القائمة العلوية متجاوبة */}
-      <nav className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between items-center max-w-7xl mx-auto">
+      {/* القائمة العلوية مع زر الإعدادات المخفي */}
+      <nav className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center max-w-7xl mx-auto">
         <div className="text-xl sm:text-2xl font-black text-amber-400 tracking-wider flex items-center gap-2">
           📸 PhotoFolio
         </div>
-        <div className="flex flex-wrap justify-center gap-3 sm:gap-6 items-center text-xs sm:text-sm font-semibold text-slate-300">
+
+        <div className="flex items-center gap-4 sm:gap-6 text-xs sm:text-sm font-semibold text-slate-300">
           <a href="#hero" className="hover:text-amber-400 transition">الرئيسية</a>
           <a href="#about" className="hover:text-amber-400 transition">من نحن</a>
           <a href="#gallery" className="hover:text-amber-400 transition">معرض الأعمال</a>
+          
+          {/* أيقونة الإعدادات المخفية بذكاء */}
           <Link
             href="/admin"
-            className="bg-amber-500 text-slate-950 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl font-bold hover:bg-amber-400 transition text-xs sm:text-sm"
+            title="لوحة التحكم"
+            className="p-1.5 rounded-lg text-slate-600 hover:text-slate-300 hover:bg-slate-800/50 transition duration-300 text-base sm:text-lg opacity-60 hover:opacity-100"
           >
-            لوحة التحكم ⚙️
+            ⚙️
           </Link>
         </div>
       </nav>
@@ -198,7 +202,7 @@ export default function HomePage() {
           <div className="text-center py-16 sm:py-20 text-slate-400 text-base sm:text-lg">جاري تحميل الأعمال من Supabase...</div>
         ) : galleryItems.length === 0 ? (
           <div className="text-center py-16 sm:py-20 px-4 text-slate-500 bg-slate-900/40 rounded-3xl border border-slate-800 text-xs sm:text-sm">
-            لا توجد عناصر في المعرض حالياً. اذهب إلى <Link href="/admin" className="text-amber-400 underline">لوحة التحكم</Link> لرفع محتوى جديد!
+            لا توجد عناصر في المعرض حالياً.
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
@@ -253,7 +257,7 @@ export default function HomePage() {
 
       {/* الفوتر */}
       <footer className="border-t border-slate-800 py-6 sm:py-8 text-center text-slate-500 text-xs sm:text-sm px-4">
-        © 2026 PhotoFolio – تم الربط بـ Supabase 🚀
+        © 2026 PhotoFolio – جميع الحقوق محفوظة 🚀
       </footer>
     </div>
   );
