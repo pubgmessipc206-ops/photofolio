@@ -29,7 +29,7 @@ export default function AdminPage() {
   const [section, setSection] = useState('gallery');
   const [uploadMode, setUploadMode] = useState<'file' | 'youtube'>('file');
   const [youtubeUrl, setYoutubeUrl] = useState('');
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [mediaList, setMediaList] = useState<MediaItem[]>([]);
 
@@ -74,12 +74,11 @@ export default function AdminPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title) return alert('الرجاء إدخال عنوان العنصر!');
-
     setLoading(true);
 
     try {
       if (uploadMode === 'youtube') {
+        if (!title) throw new Error('الرجاء إدخال عنوان العنصر!');
         if (!youtubeUrl) throw new Error('الرجاء إدخال رابط يوتيوب!');
         const embedUrl = getYouTubeEmbedUrl(youtubeUrl);
         if (!embedUrl) throw new Error('رابط يوتيوب غير صحيح!');
@@ -95,41 +94,50 @@ export default function AdminPage() {
 
         if (dbError) throw dbError;
       } else {
-        if (!file) throw new Error('الرجاء اختيار ملف لرفعه!');
+        if (files.length === 0) throw new Error('الرجاء اختيار ملف واحد على الأقل لرفعه!');
 
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `${section}/${fileName}`;
+        // رفع جميع الملفات المختارة
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Date.now()}_${i}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+          const filePath = `${section}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('media')
-          .upload(filePath, file);
+          const { error: uploadError } = await supabase.storage
+            .from('media')
+            .upload(filePath, file);
 
-        if (uploadError) throw uploadError;
+          if (uploadError) throw uploadError;
 
-        const { data: publicUrlData } = supabase.storage
-          .from('media')
-          .getPublicUrl(filePath);
+          const { data: publicUrlData } = supabase.storage
+            .from('media')
+            .getPublicUrl(filePath);
 
-        const publicUrl = publicUrlData.publicUrl;
-        const isVideo = file.type.startsWith('video');
+          const publicUrl = publicUrlData.publicUrl;
+          const isVideo = file.type.startsWith('video');
 
-        const { error: dbError } = await supabase.from('media_items').insert([
-          {
-            title,
-            url: publicUrl,
-            type: isVideo ? 'video' : 'image',
-            section,
-          },
-        ]);
+          // لو المستخدم كاتب عنوان نستخدمه، لو رفع أكتر من ملف وما كتبش عنوان نستخدم اسم الملف
+          const itemTitle = title
+            ? (files.length > 1 ? `${title} (${i + 1})` : title)
+            : file.name.replace(/\.[^/.]+$/, "");
 
-        if (dbError) throw dbError;
+          const { error: dbError } = await supabase.from('media_items').insert([
+            {
+              title: itemTitle,
+              url: publicUrl,
+              type: isVideo ? 'video' : 'image',
+              section,
+            },
+          ]);
+
+          if (dbError) throw dbError;
+        }
       }
 
-      alert('تمت الإضافة بنجاح! 🎉');
+      alert(`تم رفع ${files.length > 0 ? files.length : 1} عنصر بنجاح! 🎉`);
       setTitle('');
       setYoutubeUrl('');
-      setFile(null);
+      setFiles([]);
       fetchMedia();
     } catch (error: any) {
       alert('حدث خطأ: ' + error.message);
@@ -216,17 +224,16 @@ export default function AdminPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-slate-800 p-6 rounded-2xl space-y-4 mb-10 shadow-xl border border-slate-700">
-          <h2 className="text-xl font-semibold text-slate-200">إضافة عنصر جديد للمعرض أو الريلز</h2>
+          <h2 className="text-xl font-semibold text-slate-200">إضافة صور أو فيديوهات متعددة</h2>
 
           <div>
-            <label className="block mb-2 text-sm font-medium text-slate-300">العنوان:</label>
+            <label className="block mb-2 text-sm font-medium text-slate-300">العنوان (اختياري عند رفع صور متعددة):</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="مثال: ريلز تصوير احترافي / لقطة سينمائية"
+              placeholder="مثال: جلسة تصوير ساحلية (سيتم ترقيم العنوان تلقائياً)"
               className="w-full p-3 rounded-xl bg-slate-700 border border-slate-600 text-white focus:outline-none focus:border-amber-400 transition"
-              required
             />
           </div>
 
@@ -256,7 +263,7 @@ export default function AdminPage() {
                     : 'bg-slate-700 text-slate-300 border-slate-600'
                 }`}
               >
-                📁 رفع ملف (صورة / فيديو)
+                📁 رفع ملفات متعددة (صور / فيديوهات)
               </button>
               <button
                 type="button"
@@ -286,14 +293,20 @@ export default function AdminPage() {
             </div>
           ) : (
             <div>
-              <label className="block mb-2 text-sm font-medium text-slate-300">اختر الملف:</label>
+              <label className="block mb-2 text-sm font-medium text-slate-300">اختر الملفات (يمكنك تحديد عدة صور معاً):</label>
               <input
                 type="file"
+                multiple
                 accept="image/*,video/*"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                onChange={(e) => setFiles(Array.from(e.target.files || []))}
                 className="w-full p-2 rounded-xl bg-slate-700 border border-slate-600 text-white cursor-pointer text-sm"
                 required
               />
+              {files.length > 0 && (
+                <p className="mt-2 text-xs text-amber-400 font-semibold">
+                  تم تحديد {files.length} ملف جاهز للرفع 📸
+                </p>
+              )}
             </div>
           )}
 
@@ -302,7 +315,7 @@ export default function AdminPage() {
             disabled={loading}
             className="w-full py-3.5 bg-amber-500 hover:bg-amber-600 font-bold rounded-xl transition text-slate-950 disabled:opacity-50 mt-4"
           >
-            {loading ? 'جاري الإضافة...' : 'حفظ وإضافة الآن 🚀'}
+            {loading ? 'جاري رفع الملفات...' : `رفع وحفظ الآن (${files.length || 1}) 🚀`}
           </button>
         </form>
 
@@ -328,7 +341,7 @@ export default function AdminPage() {
                       ) : item.type === 'video' ? (
                         <video src={item.url} controls className="w-full h-36 object-cover rounded-lg mb-2" />
                       ) : (
-                        <img src={item.url} alt={item.title} className="w-full h-36 object-cover rounded-lg mb-2" />
+                        <img src={item.url} alt={item.title} className="w-full h-36 object-contain bg-slate-900 rounded-lg mb-2" />
                       )}
                       <h3 className="font-bold text-sm text-slate-100 truncate">{item.title}</h3>
                       <div className="flex gap-2 items-center mt-2">
