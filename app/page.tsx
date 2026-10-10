@@ -84,10 +84,15 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans rtl overflow-x-hidden max-w-full" dir="rtl">
-      {/* القائمة العلوية مع أيقونة الإعدادات المخفية */}
+      {/* القائمة العلوية مع الشعار المزخرف داخل إطار وزر الإعدادات المخفي */}
       <nav className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center max-w-7xl mx-auto">
-        <div className="text-xl sm:text-2xl font-black text-amber-400 tracking-wider flex items-center gap-2">
-          📸 PhotoFolio
+        
+        {/* الشعار المزخرف داخل إطار فاخر */}
+        <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-2xl bg-slate-950 border border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.12)] hover:border-amber-400 transition duration-300">
+          <span className="text-base sm:text-lg">📸</span>
+          <span className="text-sm sm:text-base font-black tracking-widest bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500 bg-clip-text text-transparent font-serif">
+            Pʜᴏᴛᴏ • Kʜᴏʟɪᴏ
+          </span>
         </div>
 
         <div className="flex items-center gap-4 sm:gap-6 text-xs sm:text-sm font-semibold text-slate-300">
@@ -257,7 +262,7 @@ export default function HomePage() {
 
       {/* الفوتر */}
       <footer className="border-t border-slate-800 py-6 sm:py-8 text-center text-slate-500 text-xs sm:text-sm px-4">
-        © 2026 PhotoFolio – جميع الحقوق محفوظة 🚀
+        © 2026 Pʜᴏᴛᴏ • Kʜᴏʟɪᴏ – جميع الحقوق محفوظة 🚀
       </footer>
     </div>
   );
