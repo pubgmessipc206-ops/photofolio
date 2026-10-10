@@ -42,7 +42,7 @@ export default function HomePage() {
       }
     } catch (err) {
       console.error(err);
-    } finally {
+    } font-sans finally {
       setLoading(false);
     }
   };
@@ -140,7 +140,7 @@ export default function HomePage() {
       {reelsItems.length > 0 && (
         <section id="reels" className="py-12 sm:py-20 px-4 sm:px-6 max-w-7xl mx-auto bg-slate-900/30 border-y border-slate-900">
           <div className="text-center mb-10">
-            <h2 className="text-2xl sm:text-4xl font-black text-amber-400 mb-2">فيديوهات الريلز & الشورتس 📱🔥</h2>
+            <h2 className="text-2xl sm:text-4xl font-black text-amber-400 mb-2">Reels & Shorts Videos 📱🔥</h2>
             <p className="text-slate-400 text-xs sm:text-sm">شاهد أحدث اللقطات والمقاطع العمودية المصممة خصيصاً للموبايل</p>
           </div>
 
