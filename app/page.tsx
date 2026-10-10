@@ -42,7 +42,7 @@ export default function HomePage() {
       }
     } catch (err) {
       console.error(err);
-    } font-sans finally {
+    } finally {
       setLoading(false);
     }
   };
