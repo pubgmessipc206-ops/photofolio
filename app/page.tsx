@@ -10,7 +10,16 @@ interface MediaItem {
   url: string;
   type: string;
   section: string;
+  album_id?: string;
   created_at: string;
+}
+
+interface GroupedMedia {
+  id: string;
+  title: string;
+  type: string;
+  section: string;
+  items: MediaItem[];
 }
 
 function getYouTubeEmbedUrl(url: string) {
@@ -20,11 +29,68 @@ function getYouTubeEmbedUrl(url: string) {
   return match && match[2].length === 11 ? `https://www.youtube.com/embed/${match[2]}` : null;
 }
 
+// مكون السلايدر الخاص بالتقليب كـ ألبوم إنستجرام
+function InstagramCarousel({ items, heightClass = 'h-64 sm:h-80' }: { items: MediaItem[]; heightClass?: string }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const scrollLeft = Math.abs(e.currentTarget.scrollLeft);
+    const width = e.currentTarget.offsetWidth;
+    if (width > 0) {
+      const index = Math.round(scrollLeft / width);
+      setActiveIndex(index);
+    }
+  };
+
+  return (
+    <div className="relative group w-full overflow-hidden rounded-2xl bg-slate-950">
+      {/* مؤشر عدد الصور فوق الألبوم */}
+      <div className="absolute top-3 left-3 z-20 bg-slate-950/80 backdrop-blur-md text-amber-400 text-xs font-bold px-2.5 py-1 rounded-full border border-slate-800">
+        {activeIndex + 1} / {items.length} 📸
+      </div>
+
+      {/* حاوية الصور القابلة للتمرير والتقليب */}
+      <div
+        onScroll={handleScroll}
+        className="flex w-full overflow-x-auto snap-x snap-mandatory scrollbar-none dir-ltr"
+        style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}
+      >
+        {items.map((item, idx) => (
+          <div
+            key={item.id || idx}
+            className={`w-full flex-shrink-0 snap-center ${heightClass} flex items-center justify-center bg-slate-950`}
+          >
+            <img
+              src={item.url}
+              alt={item.title}
+              className="w-full h-full object-contain"
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* نقاط الترقيم بالأسفل مثل إنستجرام */}
+      {items.length > 1 && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 bg-slate-950/60 px-3 py-1.5 rounded-full backdrop-blur-sm border border-slate-800">
+          {items.map((_, i) => (
+            <div
+              key={i}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                i === activeIndex ? 'w-5 bg-amber-400' : 'w-2 bg-slate-600'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function HomePage() {
   const [mediaList, setMediaList] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'image' | 'video'>('all');
-  const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<GroupedMedia | null>(null);
 
   useEffect(() => {
     fetchMedia();
@@ -47,48 +113,52 @@ export default function HomePage() {
     }
   };
 
+  // تجميع الصور في ألبومات
+  const groupMediaItems = (items: MediaItem[]): GroupedMedia[] => {
+    const groups: { [key: string]: GroupedMedia } = {};
+    const result: GroupedMedia[] = [];
+
+    items.forEach((item) => {
+      if (item.album_id) {
+        if (!groups[item.album_id]) {
+          groups[item.album_id] = {
+            id: item.album_id,
+            title: item.title,
+            type: item.type,
+            section: item.section,
+            items: [],
+          };
+          result.push(groups[item.album_id]);
+        }
+        groups[item.album_id].items.push(item);
+      } else {
+        result.push({
+          id: item.id,
+          title: item.title,
+          type: item.type,
+          section: item.section,
+          items: [item],
+        });
+      }
+    });
+
+    return result;
+  };
+
   const heroItems = mediaList.filter((item) => item.section === 'hero');
   const aboutItems = mediaList.filter((item) => item.section === 'about');
   const reelsItems = mediaList.filter((item) => item.section === 'reels');
-  const galleryItems = mediaList
+
+  const galleryRaw = mediaList
     .filter((item) => item.section === 'gallery' || !item.section)
     .filter((item) => (filter === 'all' ? true : item.type === filter));
 
-  const renderMediaContent = (item: MediaItem, heightClass = 'h-64 sm:h-80', fitMode = 'object-contain') => {
-    const ytEmbed = getYouTubeEmbedUrl(item.url);
-
-    if (ytEmbed) {
-      return (
-        <iframe
-          src={ytEmbed}
-          className={`w-full ${heightClass} rounded-2xl`}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
-      );
-    }
-
-    if (item.type === 'video') {
-      return (
-        <video src={item.url} controls className={`w-full ${heightClass} object-cover`} />
-      );
-    }
-
-    return (
-      <div className={`w-full ${heightClass} bg-slate-950/80 flex items-center justify-center overflow-hidden`}>
-        <img
-          src={item.url}
-          alt={item.title}
-          className={`w-full h-full ${fitMode} group-hover:scale-105 transition duration-500`}
-        />
-      </div>
-    );
-  };
+  const galleryGrouped = groupMediaItems(galleryRaw);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans rtl overflow-x-hidden max-w-full" dir="rtl">
       
-      {/* نمط أنيميشن إطار الـ RGB المتحرك */}
+      {/* أنيميشن إطار الـ RGB */}
       <style jsx global>{`
         @keyframes rgbGlow {
           0% { background-position: 0% 50%; }
@@ -117,12 +187,13 @@ export default function HomePage() {
           background: #090d16;
           border-radius: 0.75rem;
         }
+        .scrollbar-none::-webkit-scrollbar {
+          display: none;
+        }
       `}</style>
 
-      {/* القائمة العلوية المتجاوبة للموبايل والكمبيوتر */}
+      {/* القائمة العلوية */}
       <nav className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-2.5 sm:px-6 py-2.5 sm:py-4 flex justify-between items-center max-w-7xl mx-auto gap-2">
-        
-        {/* اسم البراند متناسق ومستقيم بدون انكسار سطر */}
         <div className="rgb-border-box shrink-0">
           <div className="rgb-inner-content px-2.5 sm:px-4 py-1.5 sm:py-2 flex items-center gap-1.5 sm:gap-2.5">
             <span className="text-sm sm:text-xl">📸</span>
@@ -132,59 +203,29 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* أزرار التنقل */}
         <div className="flex items-center gap-2 sm:gap-6 text-xs sm:text-sm font-semibold text-slate-300 shrink-0">
-          <a
-            href="#gallery"
-            onClick={() => setFilter('image')}
-            className="hover:text-amber-400 transition"
-          >
+          <a href="#gallery" onClick={() => setFilter('image')} className="hover:text-amber-400 transition">
             الصور 📷
           </a>
           <a href="#reels" className="hover:text-amber-400 transition">الريلز 📱</a>
-          <a
-            href="#gallery"
-            onClick={() => setFilter('all')}
-            className="hover:text-amber-400 transition"
-          >
+          <a href="#gallery" onClick={() => setFilter('all')} className="hover:text-amber-400 transition">
             المعرض
           </a>
           
-          <Link
-            href="/admin"
-            title="لوحة التحكم"
-            className="p-1 rounded-lg text-slate-600 hover:text-slate-300 hover:bg-slate-800/50 transition duration-300 text-sm sm:text-lg opacity-60 hover:opacity-100"
-          >
+          <Link href="/admin" className="p-1 rounded-lg text-slate-600 hover:text-slate-300 transition text-sm sm:text-lg">
             ⚙️
           </Link>
         </div>
       </nav>
 
-      {/* قسم Hero */}
+      {/* Hero */}
       <section id="hero" className="relative py-10 sm:py-20 px-4 sm:px-6 max-w-7xl mx-auto text-center">
-        <h1 className="text-2xl sm:text-4xl md:text-6xl font-black text-white mb-4 sm:mb-6 leading-tight break-words">
+        <h1 className="text-2xl sm:text-4xl md:text-6xl font-black text-white mb-4 sm:mb-6 leading-tight">
           معرض الأعمال الفوتوغرافية
         </h1>
-
-        {heroItems.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-6">
-            {heroItems.map((item) => (
-              <div
-                key={item.id}
-                onClick={() => setSelectedMedia(item)}
-                className="relative group overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-800 shadow-2xl cursor-pointer bg-slate-900"
-              >
-                {renderMediaContent(item, 'h-64 sm:h-80', 'object-contain')}
-                <div className="p-4 bg-slate-900 text-right">
-                  <h3 className="text-base sm:text-xl font-bold text-amber-300 break-words">{item.title}</h3>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </section>
 
-      {/* قسم Reels & Shorts */}
+      {/* Reels & Shorts */}
       {reelsItems.length > 0 && (
         <section id="reels" className="py-12 sm:py-20 px-4 sm:px-6 max-w-7xl mx-auto bg-slate-900/30 border-y border-slate-900">
           <div className="text-center mb-10">
@@ -196,18 +237,10 @@ export default function HomePage() {
             {reelsItems.map((item) => {
               const ytEmbed = getYouTubeEmbedUrl(item.url);
               return (
-                <div
-                  key={item.id}
-                  className="w-full max-w-[280px] bg-slate-900 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col group hover:border-amber-400/50 transition"
-                >
+                <div key={item.id} className="w-full max-w-[280px] bg-slate-900 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col">
                   <div className="relative w-full aspect-[9/16] bg-black overflow-hidden">
                     {ytEmbed ? (
-                      <iframe
-                        src={ytEmbed}
-                        className="w-full h-full object-cover"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
+                      <iframe src={ytEmbed} className="w-full h-full object-cover" allowFullScreen />
                     ) : (
                       <video src={item.url} controls className="w-full h-full object-cover" />
                     )}
@@ -222,51 +255,22 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* قسم About */}
-      <section id="about" className="py-12 sm:py-16 px-4 sm:px-6 bg-slate-900/60 border-y border-slate-800">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-center">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-amber-400 mb-3 sm:mb-4">نبذة عني</h2>
-            <p className="text-slate-300 leading-relaxed text-base sm:text-lg mb-4 sm:mb-6">
-              مصور صانع محتوى بصري شغوف بتقديم أعلى درجات الجودة والاحترافية. أشارك معكم هنا أفضل اللقطات والمقاطع التي أعمل عليها.
-            </p>
-          </div>
-          <div>
-            {aboutItems.length > 0 ? (
-              aboutItems.map((item) => (
-                <div
-                  key={item.id}
-                  onClick={() => setSelectedMedia(item)}
-                  className="rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-700 shadow-xl cursor-pointer bg-slate-900"
-                >
-                  {renderMediaContent(item, 'h-64 sm:h-80', 'object-contain')}
-                </div>
-              ))
-            ) : (
-              <div className="bg-slate-800 h-64 sm:h-80 rounded-2xl sm:rounded-3xl flex items-center justify-center text-slate-500 border border-dashed border-slate-700 p-4 text-center text-sm">
-                يمكنك رفع صورة أو فيديو لقسم "About" من لوحة التحكم
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* قسم المعرض */}
+      {/* المعرض الرئيسي المحدث بسلايدر إنستجرام */}
       <section id="gallery" className="py-12 sm:py-20 px-4 sm:px-6 max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-8 sm:mb-10 gap-4 text-center sm:text-right">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">معرض الأعمال المتميزة</h2>
-            <p className="text-slate-400 text-xs sm:text-sm">استعرض كل الصور والفيديوهات التي تم رفعها</p>
+            <p className="text-slate-400 text-xs sm:text-sm">قم بالسحب والتمرير لتقليب صور الألبوم 📸</p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800 max-w-full">
+          <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
             <button
               onClick={() => setFilter('all')}
               className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-bold transition ${
                 filter === 'all' ? 'bg-amber-400 text-slate-950' : 'text-slate-400 hover:text-white'
               }`}
             >
-              الكل ({galleryItems.length})
+              الكل
             </button>
             <button
               onClick={() => setFilter('image')}
@@ -288,26 +292,25 @@ export default function HomePage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-16 sm:py-20 text-slate-400 text-base sm:text-lg">جاري تحميل الأعمال من Supabase...</div>
-        ) : galleryItems.length === 0 ? (
-          <div className="text-center py-16 sm:py-20 px-4 text-slate-500 bg-slate-900/40 rounded-3xl border border-slate-800 text-xs sm:text-sm">
-            لا توجد عناصر في المعرض حالياً.
+          <div className="text-center py-20 text-slate-400">جاري تحميل المعرض...</div>
+        ) : galleryGrouped.length === 0 ? (
+          <div className="text-center py-20 text-slate-500 bg-slate-900/40 rounded-3xl border border-slate-800">
+            لا توجد عناصر حالياً.
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            {galleryItems.map((item) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {galleryGrouped.map((group) => (
               <div
-                key={item.id}
-                onClick={() => setSelectedMedia(item)}
-                className="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 hover:border-amber-400/50 transition shadow-lg group flex flex-col cursor-pointer"
+                key={group.id}
+                className="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 hover:border-amber-400/50 transition shadow-lg flex flex-col"
               >
-                <div className="relative overflow-hidden bg-slate-950">
-                  {renderMediaContent(item, 'h-64 sm:h-80', 'object-contain')}
-                </div>
-                <div className="p-3 sm:p-4 flex justify-between items-center mt-auto gap-2 border-t border-slate-800/80">
-                  <h3 className="font-bold text-slate-200 text-sm sm:text-base truncate">{item.title}</h3>
-                  <span className="text-xs font-semibold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-slate-800 text-amber-400 shrink-0">
-                    {getYouTubeEmbedUrl(item.url) ? 'يوتيوب' : item.type === 'video' ? 'فيديو' : 'صورة'}
+                {/* سلايدر التقليب */}
+                <InstagramCarousel items={group.items} heightClass="h-64 sm:h-80" />
+
+                <div className="p-4 flex justify-between items-center mt-auto border-t border-slate-800/80">
+                  <h3 className="font-bold text-slate-200 text-sm sm:text-base truncate">{group.title}</h3>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-800 text-amber-400 shrink-0">
+                    {group.items.length > 1 ? `ألبوم (${group.items.length})` : 'صورة'}
                   </span>
                 </div>
               </div>
@@ -315,34 +318,6 @@ export default function HomePage() {
           </div>
         )}
       </section>
-
-      {/* Lightbox Modal */}
-      {selectedMedia && (
-        <div
-          className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-8"
-          onClick={() => setSelectedMedia(null)}
-        >
-          <div
-            className="relative max-w-5xl w-full bg-slate-900 rounded-2xl sm:rounded-3xl border border-slate-800 overflow-hidden shadow-2xl p-2 max-h-[90vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setSelectedMedia(null)}
-              className="absolute top-3 left-3 z-10 w-8 h-8 sm:w-10 sm:h-10 bg-slate-800/80 hover:bg-slate-700 text-white rounded-full flex items-center justify-center text-base sm:text-xl font-bold transition border border-slate-700"
-            >
-              ✕
-            </button>
-
-            <div className="flex items-center justify-center bg-black/50 rounded-xl sm:rounded-2xl overflow-hidden max-h-[70vh]">
-              {renderMediaContent(selectedMedia, 'max-h-[65vh]', 'object-contain')}
-            </div>
-
-            <div className="p-3 text-center">
-              <h3 className="text-base sm:text-xl font-bold text-amber-400 break-words">{selectedMedia.title}</h3>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* الفوتر */}
       <footer className="border-t border-slate-800 py-6 sm:py-8 text-center text-slate-500 text-xs sm:text-sm px-4">

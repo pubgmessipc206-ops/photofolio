@@ -10,6 +10,7 @@ interface MediaItem {
   url: string;
   type: string;
   section: string;
+  album_id?: string;
   created_at: string;
 }
 
@@ -30,6 +31,7 @@ export default function AdminPage() {
   const [uploadMode, setUploadMode] = useState<'file' | 'youtube'>('file');
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [files, setFiles] = useState<File[]>([]);
+  const [isAlbum, setIsAlbum] = useState(true);
   const [loading, setLoading] = useState(false);
   const [mediaList, setMediaList] = useState<MediaItem[]>([]);
 
@@ -96,7 +98,9 @@ export default function AdminPage() {
       } else {
         if (files.length === 0) throw new Error('الرجاء اختيار ملف واحد على الأقل لرفعه!');
 
-        // رفع جميع الملفات المختارة
+        // توليد معرّف ألبوم مشترك إذا تم رفع أكثر من صورة كألبوم إنستجرام
+        const albumGroupId = files.length > 1 && isAlbum ? `album_${Date.now()}` : null;
+
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
           const fileExt = file.name.split('.').pop();
@@ -116,9 +120,8 @@ export default function AdminPage() {
           const publicUrl = publicUrlData.publicUrl;
           const isVideo = file.type.startsWith('video');
 
-          // لو المستخدم كاتب عنوان نستخدمه، لو رفع أكتر من ملف وما كتبش عنوان نستخدم اسم الملف
           const itemTitle = title
-            ? (files.length > 1 ? `${title} (${i + 1})` : title)
+            ? (files.length > 1 && !isAlbum ? `${title} (${i + 1})` : title)
             : file.name.replace(/\.[^/.]+$/, "");
 
           const { error: dbError } = await supabase.from('media_items').insert([
@@ -127,6 +130,7 @@ export default function AdminPage() {
               url: publicUrl,
               type: isVideo ? 'video' : 'image',
               section,
+              album_id: albumGroupId,
             },
           ]);
 
@@ -134,7 +138,7 @@ export default function AdminPage() {
         }
       }
 
-      alert(`تم رفع ${files.length > 0 ? files.length : 1} عنصر بنجاح! 🎉`);
+      alert(`تم رفع الملفات بنجاح! 🎉`);
       setTitle('');
       setYoutubeUrl('');
       setFiles([]);
@@ -227,12 +231,12 @@ export default function AdminPage() {
           <h2 className="text-xl font-semibold text-slate-200">إضافة صور أو فيديوهات متعددة</h2>
 
           <div>
-            <label className="block mb-2 text-sm font-medium text-slate-300">العنوان (اختياري عند رفع صور متعددة):</label>
+            <label className="block mb-2 text-sm font-medium text-slate-300">عنوان الألبوم / الصورة:</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="مثال: جلسة تصوير ساحلية (سيتم ترقيم العنوان تلقائياً)"
+              placeholder="مثال: ألبوم جلسة التصوير البحرية 📸"
               className="w-full p-3 rounded-xl bg-slate-700 border border-slate-600 text-white focus:outline-none focus:border-amber-400 transition"
             />
           </div>
@@ -263,7 +267,7 @@ export default function AdminPage() {
                     : 'bg-slate-700 text-slate-300 border-slate-600'
                 }`}
               >
-                📁 رفع ملفات متعددة (صور / فيديوهات)
+                📁 رفع ملفات (صور / فيديوهات)
               </button>
               <button
                 type="button"
@@ -279,21 +283,9 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {uploadMode === 'youtube' ? (
-            <div>
-              <label className="block mb-2 text-sm font-medium text-slate-300">رابط يوتيوب أو شورتس (YouTube / Shorts):</label>
-              <input
-                type="url"
-                value={youtubeUrl}
-                onChange={(e) => setYoutubeUrl(e.target.value)}
-                placeholder="مثال: https://youtube.com/shorts/xxxxx أو رابط عادي"
-                className="w-full p-3 rounded-xl bg-slate-700 border border-slate-600 text-white focus:outline-none focus:border-amber-400 transition text-left dir-ltr"
-                required
-              />
-            </div>
-          ) : (
-            <div>
-              <label className="block mb-2 text-sm font-medium text-slate-300">اختر الملفات (يمكنك تحديد عدة صور معاً):</label>
+          {uploadMode === 'file' && (
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-slate-300">اختر الملفات:</label>
               <input
                 type="file"
                 multiple
@@ -302,11 +294,35 @@ export default function AdminPage() {
                 className="w-full p-2 rounded-xl bg-slate-700 border border-slate-600 text-white cursor-pointer text-sm"
                 required
               />
-              {files.length > 0 && (
-                <p className="mt-2 text-xs text-amber-400 font-semibold">
-                  تم تحديد {files.length} ملف جاهز للرفع 📸
-                </p>
+
+              {files.length > 1 && (
+                <div className="flex items-center gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-700">
+                  <input
+                    type="checkbox"
+                    id="albumCheck"
+                    checked={isAlbum}
+                    onChange={(e) => setIsAlbum(e.target.checked)}
+                    className="w-4 h-4 accent-amber-400 cursor-pointer"
+                  />
+                  <label htmlFor="albumCheck" className="text-sm font-semibold text-amber-300 cursor-pointer">
+                    تجميع الصور المحددة في ألبوم واحد قابل للتقليب (مثل إنستجرام 📸)
+                  </label>
+                </div>
               )}
+            </div>
+          )}
+
+          {uploadMode === 'youtube' && (
+            <div>
+              <label className="block mb-2 text-sm font-medium text-slate-300">رابط يوتيوب أو شورتس:</label>
+              <input
+                type="url"
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                placeholder="https://youtube.com/shorts/xxxxx"
+                className="w-full p-3 rounded-xl bg-slate-700 border border-slate-600 text-white focus:outline-none focus:border-amber-400 transition text-left dir-ltr"
+                required
+              />
             </div>
           )}
 
@@ -333,22 +349,18 @@ export default function AdminPage() {
                   <div key={item.id} className="bg-slate-700/60 p-3 rounded-xl border border-slate-600/50 flex flex-col justify-between">
                     <div>
                       {ytEmbed ? (
-                        <iframe
-                          src={ytEmbed}
-                          className="w-full h-36 rounded-lg mb-2"
-                          allowFullScreen
-                        />
+                        <iframe src={ytEmbed} className="w-full h-36 rounded-lg mb-2" allowFullScreen />
                       ) : item.type === 'video' ? (
                         <video src={item.url} controls className="w-full h-36 object-cover rounded-lg mb-2" />
                       ) : (
                         <img src={item.url} alt={item.title} className="w-full h-36 object-contain bg-slate-900 rounded-lg mb-2" />
                       )}
                       <h3 className="font-bold text-sm text-slate-100 truncate">{item.title}</h3>
-                      <div className="flex gap-2 items-center mt-2">
-                        <span className="text-xs font-semibold text-amber-400 bg-slate-800 px-2 py-0.5 rounded">
-                          {item.section}
+                      {item.album_id && (
+                        <span className="text-[10px] text-amber-300 font-bold bg-amber-900/40 px-2 py-0.5 rounded mt-1 inline-block">
+                          ألبوم مجمع 📸
                         </span>
-                      </div>
+                      )}
                     </div>
                     <button
                       onClick={() => handleDelete(item.id)}
