@@ -54,7 +54,7 @@ export default function HomePage() {
     .filter((item) => item.section === 'gallery' || !item.section)
     .filter((item) => (filter === 'all' ? true : item.type === filter));
 
-  const renderMediaContent = (item: MediaItem, heightClass = 'h-64 sm:h-80') => {
+  const renderMediaContent = (item: MediaItem, heightClass = 'h-64 sm:h-80', fitMode = 'object-contain') => {
     const ytEmbed = getYouTubeEmbedUrl(item.url);
 
     if (ytEmbed) {
@@ -75,29 +75,79 @@ export default function HomePage() {
     }
 
     return (
-      <img
-        src={item.url}
-        alt={item.title}
-        className={`w-full ${heightClass} object-cover group-hover:scale-105 transition duration-500`}
-      />
+      <div className={`w-full ${heightClass} bg-slate-950/80 flex items-center justify-center overflow-hidden`}>
+        <img
+          src={item.url}
+          alt={item.title}
+          className={`w-full h-full ${fitMode} group-hover:scale-105 transition duration-500`}
+        />
+      </div>
     );
   };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans rtl overflow-x-hidden max-w-full" dir="rtl">
-      {/* القائمة العلوية مع الشعار المزخرف داخل إطار وزر الإعدادات المخفي */}
+      
+      {/* نمط أنيميشن إطار الـ RGB المتحرك */}
+      <style jsx global>{`
+        @keyframes rgbGlow {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .rgb-border-box {
+          position: relative;
+          background: #020617;
+          border-radius: 1rem;
+          padding: 2px;
+        }
+        .rgb-border-box::before {
+          content: '';
+          position: absolute;
+          inset: -2px;
+          border-radius: 1.1rem;
+          background: linear-gradient(90deg, #ff0055, #ff0000, #ff7700, #ffeb00, #00ff66, #00ffff, #0055ff, #ff0055);
+          background-size: 400% 400%;
+          z-index: 0;
+          animation: rgbGlow 6s linear infinite;
+        }
+        .rgb-inner-content {
+          position: relative;
+          z-index: 1;
+          background: #090d16;
+          border-radius: 0.95rem;
+        }
+      `}</style>
+
+      {/* القائمة العلوية مع براند RGB كبير وزر الصور المخفي زر الرئيسية */}
       <nav className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center max-w-7xl mx-auto">
-        <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-2xl bg-slate-950 border border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.12)] hover:border-amber-400 transition duration-300">
-          <span className="text-base sm:text-lg">📸</span>
-          <span className="text-sm sm:text-base font-black tracking-widest bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500 bg-clip-text text-transparent font-serif">
-            Pʜᴏᴛᴏ • Kʜᴏʟɪᴏ
-          </span>
+        
+        {/* اسم البراند مكبّر مع إطار RGB متحرك */}
+        <div className="rgb-border-box">
+          <div className="rgb-inner-content px-4 py-2 flex items-center gap-2.5">
+            <span className="text-lg sm:text-xl">📸</span>
+            <span className="text-base sm:text-xl font-black tracking-widest bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500 bg-clip-text text-transparent font-serif">
+              Pʜᴏᴛᴏ • Kʜᴏʟɪᴏ
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm font-semibold text-slate-300">
-          <a href="#hero" className="hover:text-amber-400 transition">الرئيسية</a>
+          <a
+            href="#gallery"
+            onClick={() => setFilter('image')}
+            className="hover:text-amber-400 transition"
+          >
+            الصور 📷
+          </a>
           <a href="#reels" className="hover:text-amber-400 transition">الريلز 📱</a>
-          <a href="#gallery" className="hover:text-amber-400 transition">المعرض</a>
+          <a
+            href="#gallery"
+            onClick={() => setFilter('all')}
+            className="hover:text-amber-400 transition"
+          >
+            المعرض
+          </a>
           
           <Link
             href="/admin"
@@ -109,7 +159,7 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* قسم Hero الترحيبي مع العنوان المبسط فقط */}
+      {/* قسم Hero */}
       <section id="hero" className="relative py-12 sm:py-20 px-4 sm:px-6 max-w-7xl mx-auto text-center">
         <h1 className="text-2xl sm:text-4xl md:text-6xl font-black text-white mb-4 sm:mb-6 leading-tight break-words">
           معرض الأعمال الفوتوغرافية
@@ -123,7 +173,7 @@ export default function HomePage() {
                 onClick={() => setSelectedMedia(item)}
                 className="relative group overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-800 shadow-2xl cursor-pointer bg-slate-900"
               >
-                {renderMediaContent(item, 'h-64 sm:h-80')}
+                {renderMediaContent(item, 'h-64 sm:h-80', 'object-contain')}
                 <div className="p-4 bg-slate-900 text-right">
                   <h3 className="text-base sm:text-xl font-bold text-amber-300 break-words">{item.title}</h3>
                 </div>
@@ -188,7 +238,7 @@ export default function HomePage() {
                   onClick={() => setSelectedMedia(item)}
                   className="rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-700 shadow-xl cursor-pointer bg-slate-900"
                 >
-                  {renderMediaContent(item, 'h-64 sm:h-80')}
+                  {renderMediaContent(item, 'h-64 sm:h-80', 'object-contain')}
                 </div>
               ))
             ) : (
@@ -251,9 +301,9 @@ export default function HomePage() {
                 className="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 hover:border-amber-400/50 transition shadow-lg group flex flex-col cursor-pointer"
               >
                 <div className="relative overflow-hidden bg-slate-950">
-                  {renderMediaContent(item, 'h-48 sm:h-64')}
+                  {renderMediaContent(item, 'h-64 sm:h-80', 'object-contain')}
                 </div>
-                <div className="p-3 sm:p-4 flex justify-between items-center mt-auto gap-2">
+                <div className="p-3 sm:p-4 flex justify-between items-center mt-auto gap-2 border-t border-slate-800/80">
                   <h3 className="font-bold text-slate-200 text-sm sm:text-base truncate">{item.title}</h3>
                   <span className="text-xs font-semibold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-slate-800 text-amber-400 shrink-0">
                     {getYouTubeEmbedUrl(item.url) ? 'يوتيوب' : item.type === 'video' ? 'فيديو' : 'صورة'}
@@ -283,7 +333,7 @@ export default function HomePage() {
             </button>
 
             <div className="flex items-center justify-center bg-black/50 rounded-xl sm:rounded-2xl overflow-hidden max-h-[70vh]">
-              {renderMediaContent(selectedMedia, 'max-h-[65vh]')}
+              {renderMediaContent(selectedMedia, 'max-h-[65vh]', 'object-contain')}
             </div>
 
             <div className="p-3 text-center">
