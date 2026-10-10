@@ -84,7 +84,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans rtl overflow-x-hidden max-w-full" dir="rtl">
-      {/* القائمة العلوية مع زر الإعدادات المخفي */}
+      {/* القائمة العلوية مع أيقونة الإعدادات المخفية */}
       <nav className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center max-w-7xl mx-auto">
         <div className="text-xl sm:text-2xl font-black text-amber-400 tracking-wider flex items-center gap-2">
           📸 PhotoFolio
@@ -95,7 +95,7 @@ export default function HomePage() {
           <a href="#about" className="hover:text-amber-400 transition">من نحن</a>
           <a href="#gallery" className="hover:text-amber-400 transition">معرض الأعمال</a>
           
-          {/* أيقونة الإعدادات المخفية بذكاء */}
+          {/* أيقونة الإعدادات المخفية */}
           <Link
             href="/admin"
             title="لوحة التحكم"
