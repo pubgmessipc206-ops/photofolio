@@ -139,7 +139,7 @@ export default function AdminPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('هل أنت تأكد من الحذف؟')) return;
+    if (!confirm('هل أنت متأكد من الحذف؟')) return;
 
     try {
       const { error } = await supabase.from('media_items').delete().eq('id', id);
@@ -197,7 +197,7 @@ export default function AdminPage() {
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
           <h1 className="text-2xl sm:text-3xl font-bold text-amber-400">
-            لوحة تحكم مشروع PhotoFolio 📸
+            لوحة تحكم Pʜᴏᴛᴏ • Kʜᴏʟɪᴏ 📸
           </h1>
           <div className="flex gap-3">
             <Link
@@ -216,7 +216,7 @@ export default function AdminPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-slate-800 p-6 rounded-2xl space-y-4 mb-10 shadow-xl border border-slate-700">
-          <h2 className="text-xl font-semibold text-slate-200">إضافة صورة أو فيديو جديد</h2>
+          <h2 className="text-xl font-semibold text-slate-200">إضافة عنصر جديد للمعرض أو الريلز</h2>
 
           <div>
             <label className="block mb-2 text-sm font-medium text-slate-300">العنوان:</label>
@@ -224,7 +224,7 @@ export default function AdminPage() {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="مثال: فيديو مشروع جديد / صورة غلاف المعرض"
+              placeholder="مثال: ريلز تصوير احترافي / لقطة سينمائية"
               className="w-full p-3 rounded-xl bg-slate-700 border border-slate-600 text-white focus:outline-none focus:border-amber-400 transition"
               required
             />
@@ -239,7 +239,8 @@ export default function AdminPage() {
             >
               <option value="hero">Hero (السلايدر الرئيسي)</option>
               <option value="about">About (قسم من نحن)</option>
-              <option value="gallery">Gallery (معرض الصور والفيديوهات)</option>
+              <option value="reels">Reels & Shorts (فيديوهات الريلز القصيرة 📱)</option>
+              <option value="gallery">Gallery (معرض الصور والفيديوهات العادي)</option>
             </select>
           </div>
 
@@ -266,26 +267,26 @@ export default function AdminPage() {
                     : 'bg-slate-700 text-slate-300 border-slate-600'
                 }`}
               >
-                🎬 فيديو من يوتيوب (رابط)
+                🎬 يوتيوب / شورتس (رابط)
               </button>
             </div>
           </div>
 
           {uploadMode === 'youtube' ? (
             <div>
-              <label className="block mb-2 text-sm font-medium text-slate-300">رابط فيديو YouTube:</label>
+              <label className="block mb-2 text-sm font-medium text-slate-300">رابط يوتيوب أو شورتس (YouTube / Shorts):</label>
               <input
                 type="url"
                 value={youtubeUrl}
                 onChange={(e) => setYoutubeUrl(e.target.value)}
-                placeholder="مثال: https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                placeholder="مثال: https://youtube.com/shorts/xxxxx أو رابط عادي"
                 className="w-full p-3 rounded-xl bg-slate-700 border border-slate-600 text-white focus:outline-none focus:border-amber-400 transition text-left dir-ltr"
                 required
               />
             </div>
           ) : (
             <div>
-              <label className="block mb-2 text-sm font-medium text-slate-300">اختر الملف (صورة أو فيديو):</label>
+              <label className="block mb-2 text-sm font-medium text-slate-300">اختر الملف:</label>
               <input
                 type="file"
                 accept="image/*,video/*"
@@ -333,9 +334,6 @@ export default function AdminPage() {
                       <div className="flex gap-2 items-center mt-2">
                         <span className="text-xs font-semibold text-amber-400 bg-slate-800 px-2 py-0.5 rounded">
                           {item.section}
-                        </span>
-                        <span className="text-xs font-semibold text-slate-300 bg-slate-800 px-2 py-0.5 rounded">
-                          {ytEmbed ? 'يوتيوب 🎬' : item.type === 'video' ? 'فيديو 🎥' : 'صورة 📷'}
                         </span>
                       </div>
                     </div>

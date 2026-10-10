@@ -49,6 +49,7 @@ export default function HomePage() {
 
   const heroItems = mediaList.filter((item) => item.section === 'hero');
   const aboutItems = mediaList.filter((item) => item.section === 'about');
+  const reelsItems = mediaList.filter((item) => item.section === 'reels');
   const galleryItems = mediaList
     .filter((item) => item.section === 'gallery' || !item.section)
     .filter((item) => (filter === 'all' ? true : item.type === filter));
@@ -86,8 +87,6 @@ export default function HomePage() {
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans rtl overflow-x-hidden max-w-full" dir="rtl">
       {/* القائمة العلوية مع الشعار المزخرف داخل إطار وزر الإعدادات المخفي */}
       <nav className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center max-w-7xl mx-auto">
-        
-        {/* الشعار المزخرف داخل إطار فاخر */}
         <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-2xl bg-slate-950 border border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.12)] hover:border-amber-400 transition duration-300">
           <span className="text-base sm:text-lg">📸</span>
           <span className="text-sm sm:text-base font-black tracking-widest bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500 bg-clip-text text-transparent font-serif">
@@ -95,12 +94,11 @@ export default function HomePage() {
           </span>
         </div>
 
-        <div className="flex items-center gap-4 sm:gap-6 text-xs sm:text-sm font-semibold text-slate-300">
+        <div className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm font-semibold text-slate-300">
           <a href="#hero" className="hover:text-amber-400 transition">الرئيسية</a>
-          <a href="#about" className="hover:text-amber-400 transition">من نحن</a>
-          <a href="#gallery" className="hover:text-amber-400 transition">معرض الأعمال</a>
+          <a href="#reels" className="hover:text-amber-400 transition">الريلز 📱</a>
+          <a href="#gallery" className="hover:text-amber-400 transition">المعرض</a>
           
-          {/* أيقونة الإعدادات المخفية */}
           <Link
             href="/admin"
             title="لوحة التحكم"
@@ -137,6 +135,44 @@ export default function HomePage() {
           </div>
         )}
       </section>
+
+      {/* قسم Reels & Shorts القصيرة العمودية */}
+      {reelsItems.length > 0 && (
+        <section id="reels" className="py-12 sm:py-20 px-4 sm:px-6 max-w-7xl mx-auto bg-slate-900/30 border-y border-slate-900">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl sm:text-4xl font-black text-amber-400 mb-2">فيديوهات الريلز & الشورتس 📱🔥</h2>
+            <p className="text-slate-400 text-xs sm:text-sm">شاهد أحدث اللقطات والمقاطع العمودية المصممة خصيصاً للموبايل</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
+            {reelsItems.map((item) => {
+              const ytEmbed = getYouTubeEmbedUrl(item.url);
+              return (
+                <div
+                  key={item.id}
+                  className="w-full max-w-[280px] bg-slate-900 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col group hover:border-amber-400/50 transition"
+                >
+                  <div className="relative w-full aspect-[9/16] bg-black overflow-hidden">
+                    {ytEmbed ? (
+                      <iframe
+                        src={ytEmbed}
+                        className="w-full h-full object-cover"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <video src={item.url} controls className="w-full h-full object-cover" />
+                    )}
+                  </div>
+                  <div className="p-4 bg-slate-900 text-center mt-auto">
+                    <h3 className="font-bold text-slate-200 text-sm truncate">{item.title}</h3>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* قسم About */}
       <section id="about" className="py-12 sm:py-16 px-4 sm:px-6 bg-slate-900/60 border-y border-slate-800">
