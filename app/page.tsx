@@ -373,14 +373,14 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* نافذة العرض المكبرة (Lightbox) عند النقر على الصورة */}
+      {/* نافذة العرض المكبرة (Lightbox) - تم تعديل الأبعاد لتناسب الكمبيوتر والموبايل بشكل مثالي */}
       {selectedMedia && (
         <div
           className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-3 sm:p-8"
           onClick={() => setSelectedMedia(null)}
         >
           <div
-            className="relative max-w-5xl w-full bg-slate-900 rounded-2xl sm:rounded-3xl border border-slate-800 overflow-hidden shadow-2xl p-2 max-h-[90vh] flex flex-col"
+            className="relative max-w-5xl bg-slate-900 rounded-2xl sm:rounded-3xl border border-slate-800 overflow-hidden shadow-2xl p-4 max-h-[90vh] flex flex-col items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -390,11 +390,21 @@ export default function HomePage() {
               ✕
             </button>
 
-            <div className="flex items-center justify-center bg-black/50 rounded-xl sm:rounded-2xl overflow-hidden max-h-[75vh]">
-              {renderSingleMediaContent(selectedMedia, 'max-h-[70vh]')}
+            <div className="flex items-center justify-center bg-black/50 rounded-xl sm:rounded-2xl overflow-hidden p-2 max-h-[75vh]">
+              {selectedMedia.type === 'video' ? (
+                <video src={selectedMedia.url} controls className="max-w-full max-h-[70vh] object-contain" />
+              ) : getYouTubeEmbedUrl(selectedMedia.url) ? (
+                <iframe src={getYouTubeEmbedUrl(selectedMedia.url)!} className="w-[80vw] h-[70vh] rounded-2xl" allowFullScreen />
+              ) : (
+                <img
+                  src={selectedMedia.url}
+                  alt={selectedMedia.title}
+                  className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                />
+              )}
             </div>
 
-            <div className="p-3 text-center">
+            <div className="p-3 text-center mt-2">
               <h3 className="text-base sm:text-xl font-bold text-amber-400 break-words">{selectedMedia.title}</h3>
             </div>
           </div>
