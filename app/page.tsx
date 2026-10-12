@@ -65,14 +65,12 @@ function InstagramCarousel({
 
   return (
     <div className="relative group w-full overflow-hidden rounded-2xl bg-slate-950">
-      {/* عداد الصور للألبوم */}
       {items.length > 1 && (
         <div className="absolute top-3 left-3 z-20 bg-slate-950/85 backdrop-blur-md text-amber-400 text-xs font-bold px-2.5 py-1 rounded-full border border-slate-800 pointer-events-none">
           {activeIndex + 1} / {items.length} 📸
         </div>
       )}
 
-      {/* زر المشاركة السريعة */}
       <button
         onClick={handleShare}
         className="absolute top-3 right-3 z-20 bg-slate-900/80 hover:bg-slate-800 text-slate-200 p-2 rounded-full backdrop-blur-md border border-slate-700 transition shadow-lg text-xs flex items-center gap-1"
@@ -82,7 +80,6 @@ function InstagramCarousel({
         {copied && <span className="text-[10px] text-emerald-400 font-bold px-1">تم النسخ!</span>}
       </button>
 
-      {/* حاوية التقليب بالسحب أو اللمس */}
       <div
         onScroll={handleScroll}
         className="flex w-full overflow-x-auto snap-x snap-mandatory scrollbar-none dir-ltr cursor-pointer"
@@ -103,7 +100,6 @@ function InstagramCarousel({
         ))}
       </div>
 
-      {/* نقاط الترقيم في الأسفل */}
       {items.length > 1 && (
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-1.5 bg-slate-950/60 px-3 py-1.5 rounded-full backdrop-blur-sm border border-slate-800 pointer-events-none">
           {items.map((_, i) => (
@@ -122,24 +118,30 @@ function InstagramCarousel({
 
 export default function HomePage() {
   const [mediaList, setMediaList] = useState<MediaItem[]>([]);
+  const [packages, setPackages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'image' | 'video'>('all');
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
 
   useEffect(() => {
-    fetchMedia();
+    fetchData();
   }, []);
 
-  const fetchMedia = async () => {
+  const fetchData = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: mediaData } = await supabase
         .from('media_items')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (!error && data) {
-        setMediaList(data);
-      }
+      if (mediaData) setMediaList(mediaData);
+
+      const { data: pkgData } = await supabase
+        .from('packages')
+        .select('*')
+        .order('display_order', { ascending: true });
+
+      if (pkgData) setPackages(pkgData);
     } catch (err) {
       console.error(err);
     } finally {
@@ -147,7 +149,6 @@ export default function HomePage() {
     }
   };
 
-  // تجميع الصور بنفس العنوان
   const groupMediaItems = (items: MediaItem[]): GroupedMedia[] => {
     const groups: { [title: string]: MediaItem[] } = {};
     const result: GroupedMedia[] = [];
@@ -216,7 +217,6 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans rtl overflow-x-hidden max-w-full" dir="rtl">
       
-      {/* أنيميشن إطار الـ RGB المتحرك وتأثيرات الظهور */}
       <style jsx global>{`
         @keyframes rgbGlow {
           0% { background-position: 0% 50%; }
@@ -257,11 +257,10 @@ export default function HomePage() {
         }
       `}</style>
 
-      {/* القائمة العلوية المتجاوبة تماماً للموبايل والكمبيوتر */}
+      {/* القائمة العلوية */}
       <nav className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-3 py-2.5 sm:py-4 max-w-7xl mx-auto shadow-xl">
         <div className="flex items-center justify-between gap-2">
           
-          {/* الجانب الأيمن: شعار البراند */}
           <div className="rgb-border-box shrink-0">
             <div className="rgb-inner-content px-2.5 sm:px-4 py-1 sm:py-2 flex items-center gap-1.5 sm:gap-2.5">
               <span className="text-xs sm:text-xl">📸</span>
@@ -271,9 +270,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* الجانب الأيسر: زر الواتساب وروابط الصفحات */}
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            {/* زر الواتساب المباشر */}
             <a
               href="https://wa.me/201015732487?text=مرحباً، أريد الاستفسار عن جلسات التصوير"
               target="_blank"
@@ -287,11 +284,10 @@ export default function HomePage() {
               <span className="dir-ltr font-mono text-xs hidden sm:inline">01015732487</span>
             </a>
 
-            {/* روابط القائمة */}
             <div className="flex items-center gap-1.5 sm:gap-4 text-[11px] sm:text-sm font-semibold text-slate-300 overflow-x-auto scrollbar-none">
               <a href="#gallery" onClick={() => setFilter('image')} className="hover:text-amber-400 transition whitespace-nowrap">صور 📷</a>
               <a href="#reels" className="hover:text-amber-400 transition whitespace-nowrap">ريلز 📱</a>
-              <a href="#pricing" className="hover:text-amber-400 transition whitespace-nowrap">الباقات 💎</a>
+              {packages.length > 0 && <a href="#pricing" className="hover:text-amber-400 transition whitespace-nowrap">الباقات 💎</a>}
               <a href="#gallery" onClick={() => setFilter('all')} className="hover:text-amber-400 transition whitespace-nowrap">المعرض</a>
               <Link href="/admin" className="p-1 rounded-lg text-slate-600 hover:text-slate-300 transition text-sm sm:text-lg">⚙️</Link>
             </div>
@@ -354,88 +350,68 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* قسم الباقات والأسعار الجديد (Pricing Packages) */}
-      <section id="pricing" className="py-16 sm:py-24 px-4 sm:px-6 max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl sm:text-4xl font-black text-amber-400 mb-3">باقات التصوير والأسعار 💎</h2>
-          <p className="text-slate-400 text-xs sm:text-sm">اختر الباقة المناسبة لجلسة تصويرك القادمة واحجز مباشرة عبر الواتساب</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-          
-          {/* الباقة الأولى */}
-          <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6 flex flex-col justify-between hover:border-amber-400/50 transition shadow-xl">
-            <div>
-              <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-800 text-amber-400">بورتريه شخصي</span>
-              <h3 className="text-xl font-bold text-white mt-4 mb-2">باقة الأساسي</h3>
-              <p className="text-slate-400 text-xs mb-6">مناسبة لجلسات البورتريه الفردية وصور السير الذاتية وصناعة المحتوى.</p>
-              <ul className="space-y-3 text-xs sm:text-sm text-slate-300 mb-6">
-                <li className="flex items-center gap-2">✅ مدة الجلسة: ساعة واحدة</li>
-                <li className="flex items-center gap-2">✅ تسليم 10 صور معدلة باحترافية</li>
-                <li className="flex items-center gap-2">✅ مكان تصوير خارجي واحد</li>
-              </ul>
-            </div>
-            <a
-              href="https://wa.me/201015732487?text=مرحباً، أريد حجز باقة الأساسي للبورتريه"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-center transition text-xs sm:text-sm shadow-lg"
-            >
-              احجز الباقة الآن 💬
-            </a>
+      {/* قسم الباقات والأسعار (ديناميكي من لوحة التحكم) */}
+      {packages.length > 0 && (
+        <section id="pricing" className="py-16 sm:py-24 px-4 sm:px-6 max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl sm:text-4xl font-black text-amber-400 mb-3">باقات التصوير والأسعار 💎</h2>
+            <p className="text-slate-400 text-xs sm:text-sm">اختر الباقة المناسبة لجلسة تصويرك القادمة واحجز مباشرة عبر الواتساب</p>
           </div>
 
-          {/* الباقة الثانية (مميزة) */}
-          <div className="bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl border-2 border-amber-400 p-6 flex flex-col justify-between shadow-2xl relative transform md:-translate-y-2">
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-400 text-slate-950 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">
-              الأكثر طلباً 🔥
-            </div>
-            <div>
-              <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-400/20 text-amber-400">المناسبات والأفراح</span>
-              <h3 className="text-xl font-bold text-white mt-4 mb-2">الباقة الشاملة</h3>
-              <p className="text-slate-400 text-xs mb-6">تغطية كاملة للمناسبات الخاصة والاحتفالات واللحظات المميزة.</p>
-              <ul className="space-y-3 text-xs sm:text-sm text-slate-300 mb-6">
-                <li className="flex items-center gap-2">✅ تغطية حتى 3 ساعات</li>
-                <li className="flex items-center gap-2">✅ عدد غير محدود من الصور الأصلية</li>
-                <li className="flex items-center gap-2">✅ تسليم 30 صورة معالجة سينمائياً</li>
-                <li className="flex items-center gap-2">✅ فيديو ريلز هدية للموبايل</li>
-              </ul>
-            </div>
-            <a
-              href="https://wa.me/201015732487?text=مرحباً، أريد حجز الباقة الشاملة للمناسبات"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-center transition text-xs sm:text-sm shadow-lg"
-            >
-              احجز الباقة الآن 💬
-            </a>
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+            {packages.map((pkg) => (
+              <div
+                key={pkg.id}
+                className={`bg-slate-900 rounded-3xl border p-6 flex flex-col justify-between transition shadow-xl relative ${
+                  pkg.is_popular
+                    ? 'border-2 border-amber-400 bg-gradient-to-b from-slate-900 to-slate-950 transform md:-translate-y-2 shadow-2xl'
+                    : 'border-slate-800 hover:border-amber-400/50'
+                }`}
+              >
+                {pkg.is_popular && (
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-400 text-slate-950 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">
+                    الأكثر طلباً 🔥
+                  </div>
+                )}
 
-          {/* الباقة الثالثة */}
-          <div className="bg-slate-900 rounded-3xl border border-slate-800 p-6 flex flex-col justify-between hover:border-amber-400/50 transition shadow-xl">
-            <div>
-              <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-800 text-amber-400">جلسات خاصة</span>
-              <h3 className="text-xl font-bold text-white mt-4 mb-2">باقة الاحتراف</h3>
-              <p className="text-slate-400 text-xs mb-6">مخصصة للعارضين، العلامات التجارية المصغرة، وجلسات التصوير الفنية.</p>
-              <ul className="space-y-3 text-xs sm:text-sm text-slate-300 mb-6">
-                <li className="flex items-center gap-2">✅ مدة الجلسة: ساعتان ونصف</li>
-                <li className="flex items-center gap-2">✅ مكانين تصوير مختلفين</li>
-                <li className="flex items-center gap-2">✅ 20 صورة معدلة بدقة عالية</li>
-                <li className="flex items-center gap-2">✅ استشارة إبداعية مجانية قبل الجلسة</li>
-              </ul>
-            </div>
-            <a
-              href="https://wa.me/201015732487?text=مرحباً، أريد حجز باقة الاحتراف"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-center transition text-xs sm:text-sm shadow-lg"
-            >
-              احجز الباقة الآن 💬
-            </a>
-          </div>
+                <div>
+                  {pkg.category && (
+                    <span className="text-xs font-bold px-3 py-1 rounded-full bg-slate-800 text-amber-400">
+                      {pkg.category}
+                    </span>
+                  )}
+                  
+                  <div className="flex justify-between items-center mt-4 mb-2">
+                    <h3 className="text-xl font-bold text-white">{pkg.title}</h3>
+                    {pkg.price && <span className="text-lg font-black text-amber-400 dir-ltr">{pkg.price}</span>}
+                  </div>
 
-        </div>
-      </section>
+                  {pkg.description && <p className="text-slate-400 text-xs mb-6">{pkg.description}</p>}
+
+                  {pkg.features && pkg.features.length > 0 && (
+                    <ul className="space-y-3 text-xs sm:text-sm text-slate-300 mb-6">
+                      {pkg.features.map((feat: string, idx: number) => (
+                        <li key={idx} className="flex items-center gap-2">
+                          ✅ {feat}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <a
+                  href={`https://wa.me/201015732487?text=${encodeURIComponent(`مرحباً، أريد حجز ${pkg.title}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-center transition text-xs sm:text-sm shadow-lg mt-4"
+                >
+                  احجز الباقة الآن 💬
+                </a>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* المعرض الرئيسي */}
       <section id="gallery" className="py-12 sm:py-20 px-4 sm:px-6 max-w-7xl mx-auto">
@@ -445,7 +421,6 @@ export default function HomePage() {
             <p className="text-slate-400 text-xs sm:text-sm">اسحب لتقليب ألبوم الصور، اضغط للتكبير، أو شارك الألبوم 📸</p>
           </div>
 
-          {/* فلاتر المعرض المتجاوبة */}
           <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
             <button
               onClick={() => setFilter('all')}
@@ -487,7 +462,6 @@ export default function HomePage() {
                 key={idx}
                 className="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 hover:border-amber-400/50 transition shadow-lg flex flex-col"
               >
-                {/* سلايدر الصور مع زر المشاركة */}
                 <InstagramCarousel
                   items={group.items}
                   heightClass="h-64 sm:h-80"
