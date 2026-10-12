@@ -225,11 +225,13 @@ export default function HomePage() {
         }
       `}</style>
 
-      {/* القائمة العلوية مع زر الواتساب الخا ص بأيقونة الواتساب الرسمية */}
-      <nav className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-2 sm:px-6 py-2.5 sm:py-4 flex justify-between items-center max-w-7xl mx-auto gap-2">
-        <div className="flex items-center gap-1.5 sm:gap-3 overflow-x-auto scrollbar-none py-1">
+      {/* القائمة العلوية المتجاوبة تماماً (Responsive Navbar) */}
+      <nav className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-3 py-2.5 sm:py-4 max-w-7xl mx-auto shadow-xl">
+        <div className="flex items-center justify-between gap-2">
+          
+          {/* الجانب الأيمن: شعار البراند */}
           <div className="rgb-border-box shrink-0">
-            <div className="rgb-inner-content px-2 sm:px-4 py-1.5 sm:py-2 flex items-center gap-1.5 sm:gap-2.5">
+            <div className="rgb-inner-content px-2.5 sm:px-4 py-1 sm:py-2 flex items-center gap-1.5 sm:gap-2.5">
               <span className="text-xs sm:text-xl">📸</span>
               <span className="text-[11px] sm:text-lg font-black tracking-wider bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500 bg-clip-text text-transparent font-serif whitespace-nowrap">
                 Pʜᴏᴛᴏ • Kʜᴏʟɪᴏ
@@ -237,36 +239,43 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* زر الواتساب المباشر بأيقونة الواتساب الرسمية */}
-          <a
-            href="https://wa.me/201015732487"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-900/70 hover:border-emerald-400 transition text-xs font-bold whitespace-nowrap shadow-[0_0_12px_rgba(16,185,129,0.2)] shrink-0 group"
-            title="تواصل معي عبر الواتساب"
-          >
-            <svg
-              className="w-4 h-4 fill-emerald-400 group-hover:scale-110 transition duration-300"
-              viewBox="0 0 24 24"
+          {/* الجانب الأيسر: زر الواتساب وروابط الصفحات متناسقة تماماً */}
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            {/* زر الواتساب المباشر */}
+            <a
+              href="https://wa.me/201015732487"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-900/70 hover:border-emerald-400 transition text-xs font-bold whitespace-nowrap shadow-[0_0_12px_rgba(16,185,129,0.2)] shrink-0 group"
+              title="تواصل معي عبر الواتساب"
             >
-              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
-            </svg>
-            <span className="dir-ltr font-mono text-xs">01015732487</span>
-          </a>
-        </div>
+              <svg
+                className="w-4 h-4 fill-emerald-400 group-hover:scale-110 transition duration-300"
+                viewBox="0 0 24 24"
+              >
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+              </svg>
+              <span className="dir-ltr font-mono text-xs hidden sm:inline">01015732487</span>
+            </a>
 
-        <div className="flex items-center gap-2 sm:gap-6 text-xs sm:text-sm font-semibold text-slate-300 shrink-0">
-          <a href="#gallery" onClick={() => setFilter('image')} className="hover:text-amber-400 transition">
-            الصور 📷
-          </a>
-          <a href="#reels" className="hover:text-amber-400 transition">الريلز 📱</a>
-          <a href="#gallery" onClick={() => setFilter('all')} className="hover:text-amber-400 transition">
-            المعرض
-          </a>
-          
-          <Link href="/admin" className="p-1 rounded-lg text-slate-600 hover:text-slate-300 transition text-sm sm:text-lg">
-            ⚙️
-          </Link>
+            {/* روابط القائمة */}
+            <div className="flex items-center gap-1.5 sm:gap-5 text-[11px] sm:text-sm font-semibold text-slate-300">
+              <a href="#gallery" onClick={() => setFilter('image')} className="hover:text-amber-400 transition whitespace-nowrap">
+                الصور 📷
+              </a>
+              <a href="#reels" className="hover:text-amber-400 transition whitespace-nowrap">
+                الريلز 📱
+              </a>
+              <a href="#gallery" onClick={() => setFilter('all')} className="hover:text-amber-400 transition whitespace-nowrap">
+                المعرض
+              </a>
+              
+              <Link href="/admin" className="p-1 rounded-lg text-slate-600 hover:text-slate-300 transition text-sm sm:text-lg">
+                ⚙️
+              </Link>
+            </div>
+          </div>
+
         </div>
       </nav>
 
