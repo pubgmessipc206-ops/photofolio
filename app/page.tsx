@@ -225,15 +225,29 @@ export default function HomePage() {
         }
       `}</style>
 
-      {/* القائمة العلوية */}
+      {/* القائمة العلوية مع زر الواتساب بجانب البراند */}
       <nav className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-2.5 sm:px-6 py-2.5 sm:py-4 flex justify-between items-center max-w-7xl mx-auto gap-2">
-        <div className="rgb-border-box shrink-0">
-          <div className="rgb-inner-content px-2.5 sm:px-4 py-1.5 sm:py-2 flex items-center gap-1.5 sm:gap-2.5">
-            <span className="text-sm sm:text-xl">📸</span>
-            <span className="text-xs sm:text-lg font-black tracking-wider bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500 bg-clip-text text-transparent font-serif whitespace-nowrap">
-              Pʜᴏᴛᴏ • Kʜᴏʟɪᴏ
-            </span>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="rgb-border-box shrink-0">
+            <div className="rgb-inner-content px-2.5 sm:px-4 py-1.5 sm:py-2 flex items-center gap-1.5 sm:gap-2.5">
+              <span className="text-sm sm:text-xl">📸</span>
+              <span className="text-xs sm:text-lg font-black tracking-wider bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500 bg-clip-text text-transparent font-serif whitespace-nowrap">
+                Pʜᴏᴛᴏ • Kʜᴏʟɪᴏ
+              </span>
+            </div>
           </div>
+
+          {/* زر الواتساب المباشر */}
+          <a
+            href="https://wa.me/201015732487"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-950/70 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-900/60 hover:border-emerald-400 transition text-xs font-bold whitespace-nowrap shadow-[0_0_10px_rgba(16,185,129,0.15)]"
+            title="تواصل معي عبر الواتساب"
+          >
+            <span className="text-sm">💬</span>
+            <span className="hidden md:inline dir-ltr">01015732487</span>
+          </a>
         </div>
 
         <div className="flex items-center gap-2 sm:gap-6 text-xs sm:text-sm font-semibold text-slate-300 shrink-0">
@@ -354,7 +368,7 @@ export default function HomePage() {
                 key={idx}
                 className="bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 hover:border-amber-400/50 transition shadow-lg flex flex-col"
               >
-                {/* سلايدر الصور مع خاصية النقر لتكبير الصورة */}
+                {/* سلايدر الصور */}
                 <InstagramCarousel
                   items={group.items}
                   heightClass="h-64 sm:h-80"
@@ -373,7 +387,7 @@ export default function HomePage() {
         )}
       </section>
 
-      {/* نافذة العرض المكبرة (Lightbox) - تم تعديل الأبعاد لتناسب الكمبيوتر والموبايل بشكل مثالي */}
+      {/* نافذة العرض المكبرة (Lightbox) */}
       {selectedMedia && (
         <div
           className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-3 sm:p-8"
