@@ -226,12 +226,12 @@ export default function HomePage() {
       `}</style>
 
       {/* القائمة العلوية مع زر الواتساب بجانب البراند */}
-      <nav className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-2.5 sm:px-6 py-2.5 sm:py-4 flex justify-between items-center max-w-7xl mx-auto gap-2">
-        <div className="flex items-center gap-2 sm:gap-3">
+      <nav className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-2 sm:px-6 py-2.5 sm:py-4 flex justify-between items-center max-w-7xl mx-auto gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-3 overflow-x-auto scrollbar-none py-1">
           <div className="rgb-border-box shrink-0">
-            <div className="rgb-inner-content px-2.5 sm:px-4 py-1.5 sm:py-2 flex items-center gap-1.5 sm:gap-2.5">
-              <span className="text-sm sm:text-xl">📸</span>
-              <span className="text-xs sm:text-lg font-black tracking-wider bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500 bg-clip-text text-transparent font-serif whitespace-nowrap">
+            <div className="rgb-inner-content px-2 sm:px-4 py-1.5 sm:py-2 flex items-center gap-1.5 sm:gap-2.5">
+              <span className="text-xs sm:text-xl">📸</span>
+              <span className="text-[11px] sm:text-lg font-black tracking-wider bg-gradient-to-r from-amber-200 via-amber-400 to-amber-500 bg-clip-text text-transparent font-serif whitespace-nowrap">
                 Pʜᴏᴛᴏ • Kʜᴏʟɪᴏ
               </span>
             </div>
@@ -242,11 +242,11 @@ export default function HomePage() {
             href="https://wa.me/201015732487"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-950/70 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-900/60 hover:border-emerald-400 transition text-xs font-bold whitespace-nowrap shadow-[0_0_10px_rgba(16,185,129,0.15)]"
+            className="flex items-center gap-1 px-2 py-1.5 rounded-xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-900/70 hover:border-emerald-400 transition text-[11px] sm:text-xs font-bold whitespace-nowrap shadow-[0_0_10px_rgba(16,185,129,0.15)] shrink-0"
             title="تواصل معي عبر الواتساب"
           >
-            <span className="text-sm">💬</span>
-            <span className="hidden md:inline dir-ltr">01015732487</span>
+            <span>💬</span>
+            <span className="dir-ltr">01015732487</span>
           </a>
         </div>
 
