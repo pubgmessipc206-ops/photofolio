@@ -1,136 +1,223 @@
-'react';
+'use client';
+
 import React, { useState } from 'react';
-import { Phone, MessageCircle, ShoppingBag, Award, ShieldCheck, Truck, Sparkles, Star } from 'lucide-react';
+import { MessageCircle, ShoppingBag, Award, Shield, Plus, Minus, Phone } from 'lucide-react';
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  size: string;
+  image: string;
+  description: string;
+}
+
+const products: Product[] = [
+  {
+    id: 1,
+    name: 'عسل نحل طبيعي أصلي (سدر ملكي)',
+    price: 450,
+    size: '1 كيلو',
+    image: 'https://images.unsplash.com/photo-1587049352847-4a222e784d38?auto=format&fit=crop&w=600&q=80',
+    description: 'عسل سدر طبيعي 100% مفيد للمناعة والصحة العامة، مفحوص ومضمون.'
+  },
+  {
+    id: 2,
+    name: 'عسل حبة البركة النقي',
+    price: 350,
+    size: '1 كيلو',
+    image: 'https://images.unsplash.com/photo-1471943311424-64696f669e9a?auto=format&fit=crop&w=600&q=80',
+    description: 'عسل غني بفوائد حبة البركة لتقوية الجسم والجهاز التنفسي.'
+  },
+  {
+    id: 3,
+    name: 'عسل الموالح الطبيعي',
+    price: 300,
+    size: '1 كيلو',
+    image: 'https://images.unsplash.com/photo-1587049352847-4a222e784d38?auto=format&fit=crop&w=600&q=80',
+    description: 'عسل خفيف ولذيذ، ممتاز للاستخدام اليومي وللأطفال.'
+  }
+];
 
 export default function HoneyStore() {
-  const [selectedSize, setSelectedSize] = useState('1 كجم');
-  const [quantity, setQuantity] = useState(1);
+  const [cart, setCart] = useState<{ [key: number]: number }({});
+  const [customerName, setCustomerName] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
 
-  const honeyTypes = [
-    { name: "عسل السدر الطبيعي", price: 450, desc: "عسل نقي فاخر مستخلص من أزهاره البرية، غني بالفوائد العلاجية." },
-    { name: "عسل الموالح", price: 300, desc: "عسل خفيف ومنعش، مثالي للاستخدام اليومي وتحلية المشروبات." },
-    { name: "عسل حبة البركة", price: 400, desc: "مزيج غني يجمع بين فوائد العسل الأصلي وخصائص الحبة السوداء." }
-  ];
+  const updateQuantity = (id: number, delta: number) => {
+    setCart(prev => {
+      const current = prev[id] || 0;
+      const updated = current + delta;
+      if (updated <= 0) {
+        const copy = { ...prev };
+        delete copy[id];
+        return copy;
+      }
+      return { ...prev, [id]: updated };
+    });
+  };
 
-  const whatsappNumber = "201001316599"; // الرقم الجديد الخاص بك
+  const getTotalPrice = () => {
+    return Object.entries(cart).reduce((total, [id, qty]) => {
+      const product = products.find(p => p.id === Number(id));
+      return total + (product ? product.price * qty : 0);
+    }, 0);
+  };
 
-  const handleOrder = (productName: string, price: number) => {
-    const message = `مرحباً POB~Honey، أود طلب:
-- المنتج: ${productName}
-- الحجم: ${selectedSize}
-- الكمية: ${quantity}
-- الإجمالي: ${price * quantity} جنيه`;
-    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
+  const handleWhatsAppCheckout = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (Object.keys(cart).length === 0) {
+      alert('يرجى اختيار منتج واحد على الأقل قبل إتمام الطلب.');
+      return;
+    }
+
+    let message = `🛒 *طلب جديد من متجر POB~Honey*\n\n`;
+    if (customerName) message += `👤 الاسم: ${customerName}\n`;
+    if (customerAddress) message += `📍 العنوان: ${customerAddress}\n`;
+    message += `\n*المنتجات المطلوبة:*\n`;
+
+    Object.entries(cart).forEach(([id, qty]) => {
+      const product = products.find(p => p.id === Number(id));
+      if (product) {
+        message += `- ${product.name} (${product.size}) × ${qty} = ${product.price * qty} جنيه\n`;
+      }
+    });
+
+    message += `\n💰 *الإجمالي الكلي: ${getTotalPrice()} جنيه*\n`;
+    message += `\nشكراً لاختياركم POB~Honey 🍯`;
+
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/201001316599?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   return (
-    <main className="min-h-screen bg-stone-950 text-amber-50 font-sans selection:bg-amber-500 selection:text-stone-950">
-      {/* الهيدر */}
-      <header className="border-b border-stone-800/80 bg-stone-950/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-6 h-6 text-amber-400" />
-            <span className="text-2xl font-bold tracking-wider bg-gradient-to-r from-amber-200 via-amber-400 to-yellow-600 bg-clip-text text-transparent">
-              POB~Honey
-            </span>
+    <div className="min-h-screen bg-amber-50/50 text-gray-800 font-sans" dir="rtl">
+      {/* Header */}
+      <header className="bg-amber-600 text-white shadow-md sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <ShoppingBag className="w-8 h-8" />
+            <span className="text-2xl font-bold tracking-wider">POB~Honey</span>
           </div>
           <a
-            href={`https://wa.me/${whatsappNumber}`}
+            href="https://wa.me/201001316599"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-stone-950 px-5 py-2.5 rounded-full font-semibold transition-all shadow-lg shadow-amber-500/20"
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-medium transition"
           >
-            <MessageCircle className="w-5 h-5" />
-            <span>تواصل معنا</span>
+            <Phone className="w-5 h-5" />
+            تواصل واتساب
           </a>
         </div>
       </header>
 
-      {/* القسم الرئيسي */}
-      <section className="py-20 px-6 text-center max-w-4xl mx-auto">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 mb-6">
-          <Star className="w-4 h-4 fill-amber-400" />
-          <span className="text-sm font-medium">عسل طبيعي 100% من أطهر المناحل</span>
-        </div>
-        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6">
-          حلاوة الطبيعة الأصيلة في كل قطرة
-        </h1>
-        <p className="text-stone-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-          نقدم لك أجود أنواع العسل الطبيعي المفحوص مختبرياً لضمان أعلى معايير الجودة والنقاء لصحتك وصحة عائلتك.
-        </p>
-      </section>
-
-      {/* مميزات المتجر */}
-      <section className="border-y border-stone-900 bg-stone-900/40 py-12 px-6">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="flex items-center gap-4 p-4 rounded-xl bg-stone-900/60 border border-stone-800">
-            <ShieldCheck className="w-10 h-10 text-amber-400 shrink-0" />
-            <div>
-              <h3 className="font-bold text-lg">مضمون ومفحوص</h3>
-              <p className="text-stone-400 text-sm">خالٍ تماماً من أي إضافات سكرية.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 p-4 rounded-xl bg-stone-900/60 border border-stone-800">
-            <Award className="w-10 h-10 text-amber-400 shrink-0" />
-            <div>
-              <h3 className="font-bold text-lg">جودة فائقة</h3>
-              <p className="text-stone-400 text-sm">نقاء عالي ومعبأ بأحدث المعايير.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 p-4 rounded-xl bg-stone-900/60 border border-stone-800">
-            <Truck className="w-10 h-10 text-amber-400 shrink-0" />
-            <div>
-              <h3 className="font-bold text-lg">توصيل سريع</h3>
-              <p className="text-stone-400 text-sm">شحنات آمنة لحد باب البيت.</p>
-            </div>
+      {/* Hero Section */}
+      <section className="bg-gradient-to-b from-amber-100 to-amber-50 py-16 px-4 text-center">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-amber-900 mb-4">
+            أجود أنواع العسل الطبيعي النقي 100%
+          </h1>
+          <p className="text-lg text-amber-800 mb-8">
+            من النحل إلى مائدتك مباشرة. جودة مضمونة وصحة متكاملة لأسرتك.
+          </p>
+          <div className="flex justify-center gap-6 text-amber-900 font-semibold">
+            <div className="flex items-center gap-1"><Shield className="w-5 h-5 text-amber-700" /> مفحوص ومضمون</div>
+            <div className="flex items-center gap-1"><Award className="w-5 h-5 text-amber-700" /> إنتاج فاخر</div>
           </div>
         </div>
       </section>
 
-      {/* منتجات العسل */}
-      <section className="py-20 px-6 max-w-6xl mx-auto">
-        <h2 className="text-3xl font-bold mb-12 text-center">أبرز منتجاتنا</h2>
+      {/* Products Grid */}
+      <main className="max-w-7xl mx-auto px-4 py-12">
+        <h2 className="text-3xl font-bold text-center text-amber-900 mb-10">منتجاتنا المميزة</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {honeyTypes.map((item, index) => (
-            <div key={index} className="bg-stone-900/60 border border-stone-800 rounded-2xl p-6 flex flex-col justify-between hover:border-amber-500/50 transition-all">
+          {products.map(product => (
+            <div key={product.id} className="bg-white rounded-2xl shadow-md overflow-hidden border border-amber-100 flex flex-col justify-between">
               <div>
-                <div className="h-48 bg-stone-800/50 rounded-xl mb-6 flex items-center justify-center border border-stone-700/50">
-                  <ShoppingBag className="w-16 h-16 text-amber-500/40" />
+                <img src={product.image} alt={product.name} className="w-full h-56 object-cover" />
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-xl font-bold text-gray-900">{product.name}</h3>
+                    <span className="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-bold">{product.size}</span>
+                  </div>
+                  <p className="text-gray-600 text-sm mb-4">{product.description}</p>
+                  <div className="text-2xl font-black text-amber-700 mb-4">{product.price} جنيه</div>
                 </div>
-                <h3 className="text-xl font-bold mb-2">{item.name}</h3>
-                <p className="text-stone-400 text-sm mb-6 leading-relaxed">{item.desc}</p>
               </div>
-              
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-2xl font-black text-amber-400">{item.price} ج.م</span>
-                  <select 
-                    value={selectedSize}
-                    onChange={(e) => setSelectedSize(e.target.value)}
-                    className="bg-stone-800 border border-stone-700 rounded-lg px-3 py-1.5 text-sm text-amber-200 outline-none"
-                  >
-                    <option value="نصف كيلو">نصف كيلو</option>
-                    <option value="1 كجم">1 كجم</option>
-                  </select>
+              <div className="p-6 pt-0">
+                <div className="flex items-center justify-between border border-amber-200 rounded-lg p-2 bg-amber-50/50">
+                  <span className="text-sm font-medium text-amber-900">الكمية:</span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => updateQuantity(product.id, -1)}
+                      className="w-8 h-8 bg-white border border-amber-300 rounded-md flex items-center justify-center hover:bg-amber-100 text-amber-900"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="font-bold text-lg w-6 text-center">{cart[product.id] || 0}</span>
+                    <button
+                      onClick={() => updateQuantity(product.id, 1)}
+                      className="w-8 h-8 bg-amber-600 text-white rounded-md flex items-center justify-center hover:bg-amber-700"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={() => handleOrder(item.name, item.price)}
-                  className="w-full bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold py-3 rounded-xl transition-all shadow-lg shadow-amber-500/10 flex items-center justify-center gap-2"
-                >
-                  <MessageCircle className="w-5 h-5" />
-                  <span>اطلب عبر الواتساب</span>
-                </button>
               </div>
             </div>
           ))}
         </div>
-      </section>
 
-      {/* الفوتر */}
-      <footer className="border-t border-stone-900 py-8 text-center text-stone-500 text-sm">
+        {/* Cart & Checkout Section */}
+        <div className="mt-16 max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-amber-200 p-8">
+          <h3 className="text-2xl font-bold text-amber-900 mb-6 text-center">إتمام الطلب عبر الواتساب</h3>
+          <form onSubmit={handleWhatsAppCheckout} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">الاسم الكريم</label>
+              <input
+                type="text"
+                required
+                value={customerName}
+                onChange={e => setCustomerName(e.target.value)}
+                placeholder="ادخل اسمك هنا"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">عنوان التوصيل</label>
+              <input
+                type="text"
+                required
+                value={customerAddress}
+                onChange={e => setCustomerAddress(e.target.value)}
+                placeholder="المدينة / المنطقة / التفاصيل"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="border-t border-b border-amber-100 py-4 my-4">
+              <div className="flex justify-between text-lg font-bold text-amber-900">
+                <span>الإجمالي الكلي:</span>
+                <span>{getTotalPrice()} جنيه</span>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition"
+            >
+              <MessageCircle className="w-6 h-6" />
+              إرسال الطلب عبر الواتساب
+            </button>
+          </form>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-amber-900 text-amber-100 py-8 mt-16 text-center">
         <p>© 2026 POB~Honey. جميع الحقوق محفوظة.</p>
       </footer>
-    </main>
+    </div>
   );
 }
